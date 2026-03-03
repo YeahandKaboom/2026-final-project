@@ -30,12 +30,21 @@ game_over = False
 camera_offset_x = 0
 high_score = 0
 current_speed = INITIAL_PLAYER_SPEED
+obstacle_sequence = 0  # Track which type to spawn next (0=BOX, 1=SPIKE)
+last_obstacle_x = 0  # Track position of last spawned obstacle for proper spacing
 
 def generate_obstacle():
     """Generate random obstacles ahead of the player"""
-    # Spawn at the right side of screen with better spacing
-    spawn_x = camera_offset_x + SCREEN_WIDTH + random.randint(3000, 4500)
-    obstacle_type = random.choice([Obstacle.TYPE_BOX, Obstacle.TYPE_SPIKE, Obstacle.TYPE_TALL_BOX])
+    global obstacle_sequence, last_obstacle_x
+    # Spawn at least 800 pixels away from the last obstacle
+    spawn_x = last_obstacle_x + random.randint(800, 1200)
+    last_obstacle_x = spawn_x
+    # Alternate between box and spike
+    if obstacle_sequence == 0:
+        obstacle_type = Obstacle.TYPE_BOX
+    else:
+        obstacle_type = Obstacle.TYPE_SPIKE
+    obstacle_sequence = 1 - obstacle_sequence  # Toggle between 0 and 1
     return Obstacle(spawn_x, SCREEN_HEIGHT - GROUND_HEIGHT, obstacle_type)
 
 def generate_collectible():
@@ -47,14 +56,14 @@ def generate_collectible():
 
 def spawn_manager(player_x, camera_offset_x):
     """Manage obstacle spawning"""
-    # Spawn new obstacles if needed - obstacles are very spaced out
-    if not obstacles or obstacles[-1].x < camera_offset_x + SCREEN_WIDTH + 4500:
+    # Spawn new obstacles if the last one is getting close to the screen
+    if not obstacles or obstacles[-1].x < player_x + SCREEN_WIDTH + 500:
         obstacles.append(generate_obstacle())
     
-    # Spawn collectibles less frequently
-    if not collectibles or collectibles[-1].x < camera_offset_x + SCREEN_WIDTH + 500:
-        if random.random() < 0.6:  # 60% chance to spawn collectible
-            collectibles.append(generate_collectible())
+    # Collectibles disabled
+    # if not collectibles or collectibles[-1].x < camera_offset_x + SCREEN_WIDTH + 500:
+    #     if random.random() < 0.6:  # 60% chance to spawn collectible
+    #         collectibles.append(generate_collectible())
 
 def cleanup_obstacles():
     """Remove off-screen obstacles and collectibles"""
@@ -63,11 +72,8 @@ def cleanup_obstacles():
     collectibles = [col for col in collectibles if not col.is_off_screen()]
 
 # Initial obstacles
-for _ in range(3):
+for _ in range(1):
     obstacles.append(generate_obstacle())
-
-for _ in range(2):
-    collectibles.append(generate_collectible())
 
 # Game loop
 running = True
@@ -80,7 +86,10 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if game_over:
-                # Reset game
+                # Reset game - reset obstacle sequence
+                obstacle_sequence = 0  # Reset obstacle pattern
+                last_obstacle_x = 0  # Reset obstacle position tracker
+                # Now reset the game state
                 game_over = False
                 if score > high_score:
                     high_score = score
@@ -159,13 +168,17 @@ while running:
     # Draw obstacles
     for obstacle in obstacles:
         obstacle.draw(screen, camera_offset_x)
-    
-    # Draw collectibles
-    for collectible in collectibles:
-        collectible.draw(screen, camera_offset_x)
+        # Draw hitbox around obstacle
+        hitbox_rect = obstacle.rect.copy()
+        hitbox_rect.x -= camera_offset_x
+        pygame.draw.rect(screen, (0, 255, 0), hitbox_rect, 2)  # Green outline
     
     # Draw player
     player.draw(screen, camera_offset_x)
+    # Draw player hitbox
+    player_hitbox = player.rect.copy()
+    player_hitbox.x -= camera_offset_x
+    pygame.draw.rect(screen, (255, 0, 255), player_hitbox, 2)  # Magenta outline
     
     # Draw UI
     score_text = font.render(f"Score: {score}", True, WHITE)
