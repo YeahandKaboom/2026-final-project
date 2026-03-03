@@ -1,0 +1,4 @@
+in terminal (bottom bar) run these commands in order
+git add *
+git commit -m "upload message" (so like week 1 or week 2)
+git push
