@@ -15,8 +15,9 @@ class Obstacle(pygame.sprite.Sprite):
         
         # Create obstacle visuals
         if obstacle_type == self.TYPE_BOX:
-            self.image = pygame.Surface((50, 80))
-            self.image.fill(RED)
+            self.image = pygame.Surface((50, 80), pygame.SRCALPHA)
+            pygame.draw.rect(self.image, RED, (0, 0, 50, 80))
+            pygame.draw.rect(self.image, (200, 0, 0), (5, 5, 40, 70))
             pygame.draw.rect(self.image, WHITE, (0, 0, 50, 80), 2)
             self.rect = self.image.get_rect()
             self.rect.x = x
@@ -24,16 +25,19 @@ class Obstacle(pygame.sprite.Sprite):
             
         elif obstacle_type == self.TYPE_SPIKE:
             self.image = pygame.Surface((40, 60), pygame.SRCALPHA)
-            # Draw spike/triangle
+            # Draw spike/triangle with shading
             points = [(20, 0), (0, 60), (40, 60)]
             pygame.draw.polygon(self.image, YELLOW, points)
+            pygame.draw.polygon(self.image, (200, 200, 0), [(20, 0), (0, 60), (20, 50)])
+            pygame.draw.line(self.image, WHITE, (20, 0), (20, 55), 1)
             self.rect = self.image.get_rect()
             self.rect.x = x
             self.rect.bottom = SCREEN_HEIGHT - GROUND_HEIGHT
             
         elif obstacle_type == self.TYPE_TALL_BOX:
-            self.image = pygame.Surface((40, 100))
-            self.image.fill(PURPLE)
+            self.image = pygame.Surface((40, 100), pygame.SRCALPHA)
+            pygame.draw.rect(self.image, PURPLE, (0, 0, 40, 100))
+            pygame.draw.rect(self.image, (150, 0, 150), (3, 3, 34, 94))
             pygame.draw.rect(self.image, WHITE, (0, 0, 40, 100), 2)
             self.rect = self.image.get_rect()
             self.rect.x = x

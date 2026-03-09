@@ -4,10 +4,19 @@ from constants import *
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        # Create a simple geometric cube shape
-        self.image = pygame.Surface((40, 40))
-        self.image.fill(BLUE)
-        pygame.draw.rect(self.image, WHITE, (0, 0, 40, 40), 2)  # Outline
+        # Create a more visually appealing player shape
+        self.base_image = pygame.Surface((40, 40), pygame.SRCALPHA)
+        # Draw a square with gradient-like effect
+        pygame.draw.rect(self.base_image, BLUE, (0, 0, 40, 40))
+        pygame.draw.rect(self.base_image, (0, 150, 255), (2, 2, 36, 36))
+        pygame.draw.rect(self.base_image, WHITE, (0, 0, 40, 40), 3)  # Outline
+        # Add eyes for character
+        pygame.draw.circle(self.base_image, WHITE, (12, 14), 3)
+        pygame.draw.circle(self.base_image, WHITE, (28, 14), 3)
+        pygame.draw.circle(self.base_image, BLACK, (12, 14), 1)
+        pygame.draw.circle(self.base_image, BLACK, (28, 14), 1)
+        
+        self.image = self.base_image.copy()
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -19,6 +28,7 @@ class Player(pygame.sprite.Sprite):
         self.frames_survived = 0
         self.jump_count = 0  # Track jumps for double jump
         self.max_jumps = 2  # Allow double jump
+        self.rotation_angle = 0  # Track rotation angle for flip animation
     
     def handle_input(self, keys, mouse_pressed):
         # Jump on space or mouse click
@@ -26,18 +36,20 @@ class Player(pygame.sprite.Sprite):
             self.vel_y = JUMP_STRENGTH
             self.jump_count += 1
             self.on_ground = False
+            # Start rotation for front flip - 360 degrees per jump
+            self.rotation_angle = 0
     
     def update(self, obstacles):
         # Apply gravity
         self.vel_y += GRAVITY
         
+        # Reset on_ground first
+        self.on_ground = False
+        
         # Update position - constant forward movement
         self.rect.x += self.current_speed
         self.rect.y += self.vel_y
         self.frames_survived += 1
-        
-        # Reset on_ground
-        self.on_ground = False
         
         # Ground collision
         if self.rect.bottom >= self.ground_y:
@@ -60,6 +72,25 @@ class Player(pygame.sprite.Sprite):
                         self.vel_y = 0
                         self.on_ground = True
                         self.jump_count = 0
+        
+        # Update rotation angle only when in the air (not on ground)
+        if self.on_ground:
+            # Reset rotation when on ground - stay straight
+            self.rotation_angle = 0
+        else:
+            # Flip 360 degrees during jump - complete rotation
+            self.rotation_angle += 18  # 360 / 20 frames = 18 degrees per frame
+            if self.rotation_angle >= 360:
+                self.rotation_angle = 0
+        
+        # Apply rotation to image
+        self.image = pygame.transform.rotate(self.base_image, self.rotation_angle)
+        # Store the current bottom position before updating rect
+        old_bottom = self.rect.bottom
+        old_left = self.rect.left
+        self.rect = self.image.get_rect()
+        self.rect.left = old_left
+        self.rect.bottom = old_bottom
         
         # Game over if player goes off-screen (falls or goes too far)
         if self.rect.top > SCREEN_HEIGHT:

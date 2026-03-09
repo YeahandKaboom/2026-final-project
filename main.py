@@ -14,6 +14,7 @@ clock = pygame.time.Clock()
 font = pygame.font.Font(None, 36)
 font_large = pygame.font.Font(None, 72)
 font_small = pygame.font.Font(None, 28)
+font_title = pygame.font.Font(None, 48)
 
 # Create player
 player = Player(SCREEN_WIDTH // 4, SCREEN_HEIGHT - GROUND_HEIGHT - 40)
@@ -34,18 +35,55 @@ obstacle_sequence = 0  # Track which type to spawn next (0=BOX, 1=SPIKE)
 last_obstacle_x = 0  # Track position of last spawned obstacle for proper spacing
 
 def generate_obstacle():
-    """Generate random obstacles ahead of the player"""
+    """Generate random obstacles or structures ahead of the player"""
     global obstacle_sequence, last_obstacle_x
     # Spawn at least 800 pixels away from the last obstacle
     spawn_x = last_obstacle_x + random.randint(800, 1200)
     last_obstacle_x = spawn_x
-    # Alternate between box and spike
-    if obstacle_sequence == 0:
-        obstacle_type = Obstacle.TYPE_BOX
+    
+    # Choose between single obstacles and structures
+    structure_chance = random.random()
+    
+    if structure_chance < 0.4:
+        # Single obstacles (40%)
+        obstacle_rand = random.random()
+        if obstacle_rand < 0.5:
+            obstacle_type = Obstacle.TYPE_BOX
+        elif obstacle_rand < 0.9:
+            obstacle_type = Obstacle.TYPE_SPIKE
+        else:
+            obstacle_type = Obstacle.TYPE_TALL_BOX
+        return Obstacle(spawn_x, SCREEN_HEIGHT - GROUND_HEIGHT, obstacle_type)
+    elif structure_chance < 0.7:
+        # Horizontal platform structure (30%)
+        obstacles_list = []
+        for i in range(random.randint(2, 4)):
+            obs = Obstacle(spawn_x + (i * 80), SCREEN_HEIGHT - GROUND_HEIGHT, Obstacle.TYPE_BOX)
+            obstacles_list.append(obs)
+        return obstacles_list
+    elif structure_chance < 0.85:
+        # Staircase structure going up (15%)
+        obstacles_list = []
+        for i in range(3):
+            y_offset = i * 80
+            obs = Obstacle(spawn_x + (i * 80), SCREEN_HEIGHT - GROUND_HEIGHT - y_offset, Obstacle.TYPE_BOX)
+            obstacles_list.append(obs)
+        return obstacles_list
     else:
-        obstacle_type = Obstacle.TYPE_SPIKE
-    obstacle_sequence = 1 - obstacle_sequence  # Toggle between 0 and 1
-    return Obstacle(spawn_x, SCREEN_HEIGHT - GROUND_HEIGHT, obstacle_type)
+        # Triangle mountain structure (15%)
+        obstacles_list = []
+        # Base
+        for i in range(4):
+            obs = Obstacle(spawn_x + (i * 80), SCREEN_HEIGHT - GROUND_HEIGHT, Obstacle.TYPE_BOX)
+            obstacles_list.append(obs)
+        # Middle
+        for i in range(2):
+            obs = Obstacle(spawn_x + (i * 80) + 80, SCREEN_HEIGHT - GROUND_HEIGHT - 80, Obstacle.TYPE_BOX)
+            obstacles_list.append(obs)
+        # Top
+        obs = Obstacle(spawn_x + 160, SCREEN_HEIGHT - GROUND_HEIGHT - 160, Obstacle.TYPE_SPIKE)
+        obstacles_list.append(obs)
+        return obstacles_list
 
 def generate_collectible():
     """Generate random collectibles"""
@@ -58,7 +96,12 @@ def spawn_manager(player_x, camera_offset_x):
     """Manage obstacle spawning"""
     # Spawn new obstacles if the last one is getting close to the screen
     if not obstacles or obstacles[-1].x < player_x + SCREEN_WIDTH + 500:
-        obstacles.append(generate_obstacle())
+        new_obstacle = generate_obstacle()
+        # Handle both single obstacles and lists of obstacles (structures)
+        if isinstance(new_obstacle, list):
+            obstacles.extend(new_obstacle)
+        else:
+            obstacles.append(new_obstacle)
     
     # Collectibles disabled
     # if not collectibles or collectibles[-1].x < camera_offset_x + SCREEN_WIDTH + 500:
@@ -134,16 +177,6 @@ while running:
         for obstacle in obstacles:
             obstacle.update(current_speed)
         
-        # Update collectibles and check for collection
-        for collectible in collectibles:
-            collectible.update(current_speed)
-            if player.rect.colliderect(collectible.rect) and not collectible.collected:
-                collectible.collected = True
-                score += collectible.points
-        
-        # Remove collected collectibles
-        collectibles = [col for col in collectibles if not col.collected]
-        
         # Update camera to follow player
         camera_offset_x = player.rect.x - SCREEN_WIDTH // 4
         camera_offset_x = max(0, camera_offset_x)
@@ -159,8 +192,22 @@ while running:
     # Rendering
     screen.fill(BLACK)
     
-    # Draw background
-    pygame.draw.rect(screen, (20, 20, 40), (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT))
+    # Draw background with fading color effect based on distance
+    color_index = (int(distance // 500) % len(BG_COLORS))
+    next_color_index = (color_index + 1) % len(BG_COLORS)
+    
+    # Calculate interpolation between current and next color
+    color_progress = (distance % 500) / 500.0
+    current_color = BG_COLORS[color_index]
+    next_color = BG_COLORS[next_color_index]
+    
+    # Interpolate between colors
+    bg_color = (
+        int(current_color[0] + (next_color[0] - current_color[0]) * color_progress),
+        int(current_color[1] + (next_color[1] - current_color[1]) * color_progress),
+        int(current_color[2] + (next_color[2] - current_color[2]) * color_progress)
+    )
+    pygame.draw.rect(screen, bg_color, (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - GROUND_HEIGHT))
     
     # Draw ground
     ground.draw(screen)
@@ -168,28 +215,20 @@ while running:
     # Draw obstacles
     for obstacle in obstacles:
         obstacle.draw(screen, camera_offset_x)
-        # Draw hitbox around obstacle
-        hitbox_rect = obstacle.rect.copy()
-        hitbox_rect.x -= camera_offset_x
-        pygame.draw.rect(screen, (0, 255, 0), hitbox_rect, 2)  # Green outline
     
     # Draw player
     player.draw(screen, camera_offset_x)
-    # Draw player hitbox
-    player_hitbox = player.rect.copy()
-    player_hitbox.x -= camera_offset_x
-    pygame.draw.rect(screen, (255, 0, 255), player_hitbox, 2)  # Magenta outline
     
     # Draw UI
-    score_text = font.render(f"Score: {score}", True, WHITE)
-    distance_text = font.render(f"Distance: {distance // 50}", True, WHITE)
-    speed_text = font_small.render(f"Speed: {current_speed:.1f}x", True, WHITE)
-    high_score_text = font_small.render(f"High Score: {high_score}", True, WHITE)
+    # Draw title
+    title_text = font_title.render("GEOMETRY DASH", True, WHITE)
+    screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, 5))
     
-    screen.blit(score_text, (10, 10))
-    screen.blit(distance_text, (10, 50))
-    screen.blit(speed_text, (10, 90))
-    screen.blit(high_score_text, (SCREEN_WIDTH - 250, 10))
+    distance_text = font.render(f"Distance: {int(distance // 50)}", True, WHITE)
+    speed_text = font_small.render(f"Speed: {current_speed:.1f}x", True, WHITE)
+    
+    screen.blit(distance_text, (10, 60))
+    screen.blit(speed_text, (10, 100))
     
     # Draw game over screen
     if game_over:
@@ -200,15 +239,12 @@ while running:
         screen.blit(overlay, (0, 0))
         
         game_over_text = font_large.render("GAME OVER", True, RED)
-        final_score_text = font.render(f"Final Score: {score}", True, WHITE)
         restart_text = font.render("Click to Restart", True, WHITE)
         
         screen.blit(game_over_text, 
-                   (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
-        screen.blit(final_score_text, 
-                   (SCREEN_WIDTH // 2 - final_score_text.get_width() // 2, SCREEN_HEIGHT // 2))
+                   (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 2 - 50))
         screen.blit(restart_text, 
-                   (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 100))
+                   (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
     
     pygame.display.flip()
 

@@ -13,6 +13,20 @@ DARK_GRAY = (50, 50, 50)
 YELLOW = (255, 255, 0)
 PURPLE = (200, 50, 255)
 
+# Background color palette for fading effect
+BG_COLORS = [
+    (20, 20, 60),      # Dark blue
+    (30, 20, 80),      # Dark purple
+    (60, 20, 80),      # Purple
+    (80, 20, 60),      # Magenta
+    (80, 30, 40),      # Deep red
+    (60, 40, 20),      # Brown
+    (40, 60, 20),      # Green-brown
+    (20, 60, 40),      # Teal
+    (20, 40, 80),      # Dark cyan
+    (20, 20, 60),      # Back to dark blue
+]
+
 # Physics
 GRAVITY = 0.5
 JUMP_STRENGTH = -14
