@@ -61,10 +61,12 @@ class Player(pygame.sprite.Sprite):
         # Check obstacle collisions
         for obstacle in obstacles:
             if self.rect.colliderect(obstacle.rect):
-                # Only die on spikes, can jump on boxes and tall boxes
+                # Only die on spikes and upside-down triangles, can jump on boxes and tall boxes
                 if obstacle.obstacle_type == 1:  # TYPE_SPIKE
                     return False  # Die on spikes
-                # Can stand on boxes and tall boxes
+                elif obstacle.obstacle_type == 3:  # TYPE_UPSIDE_DOWN_TRIANGLE
+                    return False  # Die on upside-down triangles
+                # Can stand on boxes and tall boxes, but can't pass through them
                 elif obstacle.obstacle_type == 0 or obstacle.obstacle_type == 2:  # TYPE_BOX or TYPE_TALL_BOX
                     # Check if we're landing on top
                     if self.rect.bottom <= obstacle.rect.top + 10 and self.vel_y >= 0:
@@ -72,6 +74,9 @@ class Player(pygame.sprite.Sprite):
                         self.vel_y = 0
                         self.on_ground = True
                         self.jump_count = 0
+                    else:
+                        # Can't pass through sides - die if hitting from any other direction
+                        return False
         
         # Update rotation angle only when in the air (not on ground)
         if self.on_ground:

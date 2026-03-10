@@ -5,6 +5,7 @@ from player import Player
 from game_platform import Ground
 from enemy import Obstacle
 from banana import Collectible
+from portal import Portal
 
 # Initialize Pygame
 pygame.init()
@@ -25,6 +26,7 @@ ground = Ground()
 # Game state
 obstacles = []
 collectibles = []
+portals = []
 score = 0
 distance = 0
 game_over = False
@@ -33,57 +35,21 @@ high_score = 0
 current_speed = INITIAL_PLAYER_SPEED
 obstacle_sequence = 0  # Track which type to spawn next (0=BOX, 1=SPIKE)
 last_obstacle_x = 0  # Track position of last spawned obstacle for proper spacing
+portal_spawned = False  # Track if portal has been spawned
 
 def generate_obstacle():
-    """Generate random obstacles or structures ahead of the player"""
+    """Generate obstacles every seven feet"""
     global obstacle_sequence, last_obstacle_x
-    # Spawn at least 800 pixels away from the last obstacle
-    spawn_x = last_obstacle_x + random.randint(800, 1200)
+    # Spawn exactly 7 feet (350 pixels) away from the last obstacle
+    spawn_x = last_obstacle_x + 350
     last_obstacle_x = spawn_x
     
-    # Choose between single obstacles and structures
-    structure_chance = random.random()
+    # Cycle through obstacle types for variety (includes upside-down triangle)
+    obstacle_types = [Obstacle.TYPE_BOX, Obstacle.TYPE_SPIKE, Obstacle.TYPE_UPSIDE_DOWN_TRIANGLE]
+    obstacle_type = obstacle_types[obstacle_sequence % len(obstacle_types)]
+    obstacle_sequence += 1
     
-    if structure_chance < 0.4:
-        # Single obstacles (40%)
-        obstacle_rand = random.random()
-        if obstacle_rand < 0.5:
-            obstacle_type = Obstacle.TYPE_BOX
-        elif obstacle_rand < 0.9:
-            obstacle_type = Obstacle.TYPE_SPIKE
-        else:
-            obstacle_type = Obstacle.TYPE_TALL_BOX
-        return Obstacle(spawn_x, SCREEN_HEIGHT - GROUND_HEIGHT, obstacle_type)
-    elif structure_chance < 0.7:
-        # Horizontal platform structure (30%)
-        obstacles_list = []
-        for i in range(random.randint(2, 4)):
-            obs = Obstacle(spawn_x + (i * 80), SCREEN_HEIGHT - GROUND_HEIGHT, Obstacle.TYPE_BOX)
-            obstacles_list.append(obs)
-        return obstacles_list
-    elif structure_chance < 0.85:
-        # Staircase structure going up (15%)
-        obstacles_list = []
-        for i in range(3):
-            y_offset = i * 80
-            obs = Obstacle(spawn_x + (i * 80), SCREEN_HEIGHT - GROUND_HEIGHT - y_offset, Obstacle.TYPE_BOX)
-            obstacles_list.append(obs)
-        return obstacles_list
-    else:
-        # Triangle mountain structure (15%)
-        obstacles_list = []
-        # Base
-        for i in range(4):
-            obs = Obstacle(spawn_x + (i * 80), SCREEN_HEIGHT - GROUND_HEIGHT, Obstacle.TYPE_BOX)
-            obstacles_list.append(obs)
-        # Middle
-        for i in range(2):
-            obs = Obstacle(spawn_x + (i * 80) + 80, SCREEN_HEIGHT - GROUND_HEIGHT - 80, Obstacle.TYPE_BOX)
-            obstacles_list.append(obs)
-        # Top
-        obs = Obstacle(spawn_x + 160, SCREEN_HEIGHT - GROUND_HEIGHT - 160, Obstacle.TYPE_SPIKE)
-        obstacles_list.append(obs)
-        return obstacles_list
+    return Obstacle(spawn_x, SCREEN_HEIGHT - GROUND_HEIGHT, obstacle_type)
 
 def generate_collectible():
     """Generate random collectibles"""
@@ -92,16 +58,23 @@ def generate_collectible():
     collectible_type = random.choice([Collectible.TYPE_COIN, Collectible.TYPE_COIN, Collectible.TYPE_STAR])
     return Collectible(spawn_x, spawn_y, collectible_type)
 
+def spawn_portal():
+    """Spawn portal when distance reaches 200"""
+    global portal_spawned
+    if not portal_spawned and distance // 50 >= 200:  # Distance is in feet units
+        portal_x = player.rect.x + SCREEN_WIDTH  # Spawn ahead of player
+        portals.append(Portal(portal_x, SCREEN_HEIGHT - GROUND_HEIGHT))
+        portal_spawned = True
+
 def spawn_manager(player_x, camera_offset_x):
     """Manage obstacle spawning"""
     # Spawn new obstacles if the last one is getting close to the screen
     if not obstacles or obstacles[-1].x < player_x + SCREEN_WIDTH + 500:
         new_obstacle = generate_obstacle()
-        # Handle both single obstacles and lists of obstacles (structures)
-        if isinstance(new_obstacle, list):
-            obstacles.extend(new_obstacle)
-        else:
-            obstacles.append(new_obstacle)
+        obstacles.append(new_obstacle)
+    
+    # Check if portal should spawn
+    spawn_portal()
     
     # Collectibles disabled
     # if not collectibles or collectibles[-1].x < camera_offset_x + SCREEN_WIDTH + 500:
@@ -109,12 +82,14 @@ def spawn_manager(player_x, camera_offset_x):
     #         collectibles.append(generate_collectible())
 
 def cleanup_obstacles():
-    """Remove off-screen obstacles and collectibles"""
-    global obstacles, collectibles
+    """Remove off-screen obstacles, collectibles, and portals"""
+    global obstacles, collectibles, portals
     obstacles = [obs for obs in obstacles if not obs.is_off_screen()]
     collectibles = [col for col in collectibles if not col.is_off_screen()]
+    portals = [port for port in portals if not port.is_off_screen()]
 
-# Initial obstacles
+# Initial obstacles - start with 10 foot spacing from player
+last_obstacle_x = (SCREEN_WIDTH // 4) + 500  # 10 feet = 500 pixels from player start
 for _ in range(1):
     obstacles.append(generate_obstacle())
 
@@ -131,7 +106,8 @@ while running:
             if game_over:
                 # Reset game - reset obstacle sequence
                 obstacle_sequence = 0  # Reset obstacle pattern
-                last_obstacle_x = 0  # Reset obstacle position tracker
+                last_obstacle_x = (SCREEN_WIDTH // 4) + 500  # Reset with 10 foot spacing from player start
+                portal_spawned = False  # Reset portal spawn
                 # Now reset the game state
                 game_over = False
                 if score > high_score:
@@ -140,6 +116,7 @@ while running:
                 distance = 0
                 obstacles = []
                 collectibles = []
+                portals = []  # Reset portals
                 camera_offset_x = 0
                 current_speed = INITIAL_PLAYER_SPEED
                 player.rect.x = SCREEN_WIDTH // 4
@@ -176,6 +153,18 @@ while running:
         # Update obstacles
         for obstacle in obstacles:
             obstacle.update(current_speed)
+        
+        # Update portals
+        for portal in portals:
+            portal.update(current_speed)
+        
+        # Check portal collision
+        for portal in portals:
+            if player.rect.colliderect(portal.rect):
+                # Portal gives bonus points and removes itself
+                score += 500
+                portals.remove(portal)
+                break
         
         # Update camera to follow player
         camera_offset_x = player.rect.x - SCREEN_WIDTH // 4
@@ -215,6 +204,10 @@ while running:
     # Draw obstacles
     for obstacle in obstacles:
         obstacle.draw(screen, camera_offset_x)
+    
+    # Draw portals
+    for portal in portals:
+        portal.draw(screen, camera_offset_x)
     
     # Draw player
     player.draw(screen, camera_offset_x)

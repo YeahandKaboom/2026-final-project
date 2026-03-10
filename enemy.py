@@ -6,6 +6,7 @@ class Obstacle(pygame.sprite.Sprite):
     TYPE_BOX = 0
     TYPE_SPIKE = 1
     TYPE_TALL_BOX = 2
+    TYPE_UPSIDE_DOWN_TRIANGLE = 3
     
     def __init__(self, x, y, obstacle_type=TYPE_BOX):
         super().__init__()
@@ -42,6 +43,19 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect = self.image.get_rect()
             self.rect.x = x
             self.rect.bottom = SCREEN_HEIGHT - GROUND_HEIGHT
+            
+        elif obstacle_type == self.TYPE_UPSIDE_DOWN_TRIANGLE:
+            # Upside-down triangle that hangs from ceiling - just enough room for 40px player
+            self.image = pygame.Surface((60, 50), pygame.SRCALPHA)
+            # Draw upside-down triangle with shading
+            points = [(30, 50), (0, 0), (60, 0)]
+            pygame.draw.polygon(self.image, GREEN, points)
+            pygame.draw.polygon(self.image, (0, 200, 0), [(30, 50), (15, 10), (30, 10)])
+            pygame.draw.line(self.image, WHITE, (30, 50), (30, 5), 1)
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            # Position it so player has exactly 40px clearance (player height)
+            self.rect.top = SCREEN_HEIGHT - GROUND_HEIGHT - 90  # 50px triangle + 40px clearance
     
     def update(self, player_speed):
         """Move obstacle with game speed"""
