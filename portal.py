@@ -2,48 +2,53 @@ import pygame
 from constants import *
 
 class Portal(pygame.sprite.Sprite):
-    """Portal obstacle for Geometry Dash"""
-    
+    """Portal for level transition"""
     def __init__(self, x, y):
         super().__init__()
         self.x = x
         self.y = y
         
-        # Create portal visual - animated circular portal
-        self.image = pygame.Surface((60, 80), pygame.SRCALPHA)
-        self.draw_portal()
+        # Create portal visual - much larger animated circular portal
+        self.image = pygame.Surface((120, 120), pygame.SRCALPHA)  # Doubled size
         self.rect = self.image.get_rect()
         self.rect.x = x
-        self.rect.bottom = SCREEN_HEIGHT - GROUND_HEIGHT
+        self.rect.bottom = y
         
-        # Animation state
+        # Animation properties
         self.animation_frame = 0
-        self.particles = []
+        self.animation_speed = 0.1
         
-    def draw_portal(self):
-        """Draw the portal with animated effect"""
-        self.image.fill((0, 0, 0, 0))  # Clear with transparency
-        
-        # Portal outer ring
-        pygame.draw.ellipse(self.image, (150, 50, 255), (5, 5, 50, 70), 3)
-        # Inner glow
-        pygame.draw.ellipse(self.image, (200, 100, 255), (10, 10, 40, 60), 2)
-        # Center portal
-        pygame.draw.ellipse(self.image, (100, 0, 200), (15, 15, 30, 50))
-        
-        # Animated center
-        center_size = 20 + (self.animation_frame % 10)
-        pygame.draw.ellipse(self.image, (255, 255, 255), 
-                          (30 - center_size//2, 40 - center_size//2, center_size, center_size))
-    
     def update(self, player_speed):
-        """Move portal with game speed and animate"""
+        """Move portal with game speed and update animation"""
         self.rect.x -= player_speed
-        self.animation_frame += 1
+        self.animation_frame += self.animation_speed
         
         # Redraw portal with animation
-        self.draw_portal()
-    
+        self.image = pygame.Surface((120, 120), pygame.SRCALPHA)
+        
+        # Animated swirling effect - larger and more prominent
+        for i in range(4):  # One more ring for visual impact
+            radius = 50 - i * 8  # Larger radii
+            color_intensity = int(150 + 105 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 50 + i * 90).x))
+            color = (color_intensity, 0, 255 - color_intensity // 2)
+            
+            # Draw rotating arcs - thicker lines
+            start_angle = self.animation_frame + i * 90
+            pygame.draw.arc(self.image, color, 
+                          (60 - radius, 60 - radius, radius * 2, radius * 2),
+                          start_angle, start_angle + 3.14, 5)  # Thicker lines
+        
+        # Portal center glow - much larger
+        glow_size = int(20 + 10 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 100).x))
+        pygame.draw.circle(self.image, (200, 100, 255), (60, 60), glow_size)
+        
+        # Portal frame - larger and more prominent
+        pygame.draw.circle(self.image, WHITE, (60, 60), 55, 4)  # Thicker frame
+        
+        # Add pulsing outer ring for visibility
+        pulse_size = int(65 + 5 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 30).x))
+        pygame.draw.circle(self.image, (255, 200, 255), (60, 60), pulse_size, 2)
+        
     def is_off_screen(self):
         """Check if portal is off-screen to the left"""
         return self.rect.right < 0
@@ -51,5 +56,5 @@ class Portal(pygame.sprite.Sprite):
     def draw(self, surface, camera_offset_x=0):
         adjusted_rect = self.rect.copy()
         adjusted_rect.x -= camera_offset_x
-        if -50 < adjusted_rect.x < SCREEN_WIDTH:  # Only draw if visible
+        if -120 < adjusted_rect.x < SCREEN_WIDTH:  # Only draw if visible (larger portal)
             surface.blit(self.image, adjusted_rect)

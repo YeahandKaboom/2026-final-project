@@ -12,6 +12,7 @@ GRAY = (128, 128, 128)
 DARK_GRAY = (50, 50, 50)
 YELLOW = (255, 255, 0)
 PURPLE = (200, 50, 255)
+ORANGE = (255, 165, 0)
 
 # Background color palette for fading effect
 BG_COLORS = [

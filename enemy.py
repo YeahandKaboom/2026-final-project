@@ -1,4 +1,5 @@
 import pygame
+import random
 from constants import *
 
 class Obstacle(pygame.sprite.Sprite):
@@ -8,11 +9,12 @@ class Obstacle(pygame.sprite.Sprite):
     TYPE_TALL_BOX = 2
     TYPE_UPSIDE_DOWN_TRIANGLE = 3
     
-    def __init__(self, x, y, obstacle_type=TYPE_BOX):
+    def __init__(self, x, y, obstacle_type=TYPE_BOX, level=1):
         super().__init__()
         self.obstacle_type = obstacle_type
         self.x = x
         self.y = y
+        self.level = level
         
         # Create obstacle visuals
         if obstacle_type == self.TYPE_BOX:
@@ -25,7 +27,7 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT - GROUND_HEIGHT
             
         elif obstacle_type == self.TYPE_SPIKE:
-            self.image = pygame.Surface((40, 60), pygame.SRCALPHA)
+            self.image = pygame.Surface((40, 60), pygame.SRCALPHA)  # Shorter spike
             # Draw spike/triangle with shading
             points = [(20, 0), (0, 60), (40, 60)]
             pygame.draw.polygon(self.image, YELLOW, points)
@@ -45,17 +47,21 @@ class Obstacle(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT - GROUND_HEIGHT
             
         elif obstacle_type == self.TYPE_UPSIDE_DOWN_TRIANGLE:
-            # Upside-down triangle that hangs from ceiling - just enough room for 40px player
-            self.image = pygame.Surface((60, 50), pygame.SRCALPHA)
+            # Upside-down triangle that hangs from ceiling - same size in all levels
+            triangle_height = 120
+            triangle_width = 80
+            clearance = 40  # Normal clearance in all levels
+                
+            self.image = pygame.Surface((triangle_width, triangle_height), pygame.SRCALPHA)
             # Draw upside-down triangle with shading
-            points = [(30, 50), (0, 0), (60, 0)]
+            points = [(triangle_width // 2, triangle_height), (0, 0), (triangle_width, 0)]
             pygame.draw.polygon(self.image, GREEN, points)
-            pygame.draw.polygon(self.image, (0, 200, 0), [(30, 50), (15, 10), (30, 10)])
-            pygame.draw.line(self.image, WHITE, (30, 50), (30, 5), 1)
+            pygame.draw.polygon(self.image, (0, 200, 0), [(triangle_width // 2, triangle_height), (triangle_width // 4, triangle_height // 4), (triangle_width // 2, triangle_height // 4)])
+            pygame.draw.line(self.image, WHITE, (triangle_width // 2, triangle_height), (triangle_width // 2, 10), 1)
             self.rect = self.image.get_rect()
             self.rect.x = x
-            # Position it so player has exactly 40px clearance (player height)
-            self.rect.top = SCREEN_HEIGHT - GROUND_HEIGHT - 90  # 50px triangle + 40px clearance
+            # Position it with appropriate clearance
+            self.rect.top = SCREEN_HEIGHT - GROUND_HEIGHT - (triangle_height + clearance)
     
     def update(self, player_speed):
         """Move obstacle with game speed"""

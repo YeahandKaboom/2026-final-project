@@ -22,6 +22,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = y
         
         self.vel_y = 0
+        self.vel_x = 0  # Add horizontal velocity for wall crash
         self.current_speed = INITIAL_PLAYER_SPEED  # Current game speed
         self.on_ground = False
         self.ground_y = SCREEN_HEIGHT - GROUND_HEIGHT
@@ -49,6 +50,11 @@ class Player(pygame.sprite.Sprite):
         # Update position - constant forward movement
         self.rect.x += self.current_speed
         self.rect.y += self.vel_y
+        
+        # Add horizontal velocity for victory crash animation
+        if self.vel_x != 0:
+            self.rect.x += self.vel_x
+            
         self.frames_survived += 1
         
         # Ground collision
