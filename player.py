@@ -69,9 +69,9 @@ class Player(pygame.sprite.Sprite):
             if self.rect.colliderect(obstacle.rect):
                 # Only die on spikes and upside-down triangles, can jump on boxes and tall boxes
                 if obstacle.obstacle_type == 1:  # TYPE_SPIKE
-                    return False  # Die on spikes
+                    return {'alive': False, 'collision_type': 'spike'}  # Die on spikes
                 elif obstacle.obstacle_type == 3:  # TYPE_UPSIDE_DOWN_TRIANGLE
-                    return False  # Die on upside-down triangles
+                    return {'alive': False, 'collision_type': 'triangle'}  # Die on upside-down triangles
                 # Can stand on boxes and tall boxes, but can't pass through them
                 elif obstacle.obstacle_type == 0 or obstacle.obstacle_type == 2:  # TYPE_BOX or TYPE_TALL_BOX
                     # Check if we're landing on top
@@ -82,7 +82,7 @@ class Player(pygame.sprite.Sprite):
                         self.jump_count = 0
                     else:
                         # Can't pass through sides - die if hitting from any other direction
-                        return False
+                        return {'alive': False, 'collision_type': 'box'}
         
         # Update rotation angle only when in the air (not on ground)
         if self.on_ground:
@@ -103,11 +103,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.left = old_left
         self.rect.bottom = old_bottom
         
-        # Game over if player goes off-screen (falls or goes too far)
-        if self.rect.top > SCREEN_HEIGHT:
-            return False
-        
-        return True  # Still alive
+        return {'alive': True, 'collision_type': None}
     
     def draw(self, surface, camera_offset_x=0):
         adjusted_rect = self.rect.copy()

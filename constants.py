@@ -14,18 +14,18 @@ YELLOW = (255, 255, 0)
 PURPLE = (200, 50, 255)
 ORANGE = (255, 165, 0)
 
-# Background color palette for fading effect
+# Background color palette for fading effect - toned down neon colors (no yellow)
 BG_COLORS = [
-    (20, 20, 60),      # Dark blue
-    (30, 20, 80),      # Dark purple
-    (60, 20, 80),      # Purple
-    (80, 20, 60),      # Magenta
-    (80, 30, 40),      # Deep red
-    (60, 40, 20),      # Brown
-    (40, 60, 20),      # Green-brown
-    (20, 60, 40),      # Teal
-    (20, 40, 80),      # Dark cyan
-    (20, 20, 60),      # Back to dark blue
+    (0, 200, 200),      # Soft cyan
+    (200, 0, 200),      # Soft pink
+    (0, 200, 0),        # Soft green
+    (200, 100, 0),      # Soft orange
+    (100, 0, 200),      # Soft purple
+    (200, 150, 150),    # Light pink
+    (0, 200, 100),      # Soft spring green
+    (100, 200, 200),    # Light cyan
+    (150, 100, 200),    # Soft lavender
+    (0, 200, 200),      # Back to soft cyan
 ]
 
 # Physics
