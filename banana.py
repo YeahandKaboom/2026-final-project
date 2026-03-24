@@ -14,10 +14,10 @@ class Collectible(pygame.sprite.Sprite):
         self.y = y
         
         if collectible_type == self.TYPE_COIN:
-            # Draw coin (yellow circle)
+            # Draw coin (yellow circle) - removed
             self.image = pygame.Surface((COLLECTIBLE_SIZE, COLLECTIBLE_SIZE), pygame.SRCALPHA)
-            pygame.draw.circle(self.image, YELLOW, (COLLECTIBLE_SIZE // 2, COLLECTIBLE_SIZE // 2), COLLECTIBLE_SIZE // 2)
-            pygame.draw.circle(self.image, DARK_GRAY, (COLLECTIBLE_SIZE // 2, COLLECTIBLE_SIZE // 2), COLLECTIBLE_SIZE // 2 - 2, 1)
+            # pygame.draw.circle(self.image, YELLOW, (COLLECTIBLE_SIZE // 2, COLLECTIBLE_SIZE // 2), COLLECTIBLE_SIZE // 2)
+            # pygame.draw.circle(self.image, DARK_GRAY, (COLLECTIBLE_SIZE // 2, COLLECTIBLE_SIZE // 2), COLLECTIBLE_SIZE // 2 - 2, 1)
             self.points = 25
             
         elif collectible_type == self.TYPE_STAR:

@@ -17,6 +17,7 @@ class Portal(pygame.sprite.Sprite):
         # Animation properties
         self.animation_frame = 0
         self.animation_speed = 0.1
+        self.used = False  # Track if portal has been used
         
     def update(self, player_speed):
         """Move portal with game speed and update animation"""
@@ -38,16 +39,16 @@ class Portal(pygame.sprite.Sprite):
                           (60 - radius, 60 - radius, radius * 2, radius * 2),
                           start_angle, start_angle + 3.14, 5)  # Thicker lines
         
-        # Portal center glow - much larger
-        glow_size = int(20 + 10 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 100).x))
-        pygame.draw.circle(self.image, (200, 100, 255), (60, 60), glow_size)
+        # Portal center glow - removed
+        # glow_size = int(20 + 10 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 100).x))
+        # pygame.draw.circle(self.image, (200, 100, 255), (60, 60), glow_size)
         
-        # Portal frame - larger and more prominent
-        pygame.draw.circle(self.image, WHITE, (60, 60), 55, 4)  # Thicker frame
+        # Portal frame - removed
+        # pygame.draw.circle(self.image, WHITE, (60, 60), 55, 4)  # Thicker frame
         
-        # Add pulsing outer ring for visibility
-        pulse_size = int(65 + 5 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 30).x))
-        pygame.draw.circle(self.image, (255, 200, 255), (60, 60), pulse_size, 2)
+        # Add pulsing outer ring - removed
+        # pulse_size = int(65 + 5 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 30).x))
+        # pygame.draw.circle(self.image, (255, 200, 255), (60, 60), pulse_size, 2)
         
     def is_off_screen(self):
         """Check if portal is off-screen to the left"""

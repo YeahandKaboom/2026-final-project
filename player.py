@@ -10,7 +10,7 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(self.base_image, BLUE, (0, 0, 40, 40))
         pygame.draw.rect(self.base_image, (0, 150, 255), (2, 2, 36, 36))
         pygame.draw.rect(self.base_image, WHITE, (0, 0, 40, 40), 3)  # Outline
-        # Add eyes for character
+        # Eyes restored
         pygame.draw.circle(self.base_image, WHITE, (12, 14), 3)
         pygame.draw.circle(self.base_image, WHITE, (28, 14), 3)
         pygame.draw.circle(self.base_image, BLACK, (12, 14), 1)

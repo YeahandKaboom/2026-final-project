@@ -13,6 +13,7 @@ DARK_GRAY = (50, 50, 50)
 YELLOW = (255, 255, 0)
 PURPLE = (200, 50, 255)
 ORANGE = (255, 165, 0)
+CYAN = (0, 255, 255)
 
 # Background color palette for fading effect - toned down neon colors (no yellow)
 BG_COLORS = [

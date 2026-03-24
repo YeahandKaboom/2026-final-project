@@ -4,6 +4,7 @@ import time
 import math
 import urllib.request
 import os
+import numpy as np
 from constants import *
 from player import Player
 from enemy import Obstacle
@@ -31,27 +32,22 @@ font_small = pygame.font.Font(None, 28)
 font_title = pygame.font.Font(None, 48)
 
 # Music setup
-def load_external_music():
+def load_local_music():
     try:
-        music_url = "https://www.bensound.com/royalty-free-music/track/extreme-action"
-        local_filename = "extreme_action_music.ogg"
-        if not os.path.exists(local_filename):
-            print(f"Downloading music from: {music_url}")
-            try:
-                urllib.request.urlretrieve(music_url, local_filename)
-                print("Music downloaded successfully!")
-            except Exception as e:
-                print(f"Could not download music: {e}")
-                return None
-        if os.path.exists(local_filename):
-            music = pygame.mixer.music.load(local_filename)
+        music_file = "bensound-extremeaction.mp3"
+        if os.path.exists(music_file):
+            print(f"Loading local music: {music_file}")
+            pygame.mixer.music.load(music_file)
             pygame.mixer.music.set_volume(0.4)  # Moderate volume
-            return music
+            pygame.mixer.music.play(-1)  # Loop indefinitely
+            print("Music loaded and playing!")
+            return True
         else:
-            return None
+            print(f"Music file not found: {music_file}")
+            return False
     except Exception as e:
         print(f"Error loading music: {e}")
-        return None
+        return False
 
 def create_stressful_beeps():
     try:
@@ -70,15 +66,14 @@ def create_stressful_beeps():
     except:
         return None
 
-external_music = load_external_music()
-if external_music:
-    pygame.mixer.music.play(-1)
-else:
+# Load and start background music
+music_loaded = load_local_music()
+if not music_loaded:
     last_beep_time = time.time()
 
 def update_background_music():
     global last_beep_time
-    if not external_music and time.time() - last_beep_time > 0.8:
+    if not music_loaded and time.time() - last_beep_time > 0.8:
         beep_sound = create_stressful_beeps()
         if beep_sound:
             beep_sound.play()
@@ -88,7 +83,8 @@ def update_background_music():
 def create_victory_sound():
     try:
         sample_rate, duration, frames = 22050, 0.5, int(22050 * 0.5)
-        arr = [[int(32767 * math.sin(2 * math.pi * 440 * (1 + i/frames) * (i/sample_rate)) * math.exp(-(i/sample_rate) * 2))] * 2 for i in range(frames)]
+        arr = np.array([int(32767 * math.sin(2 * math.pi * 440 * (1 + i/frames) * (i/sample_rate)) * math.exp(-(i/sample_rate) * 2)) for i in range(frames)], dtype=np.int16)
+        arr = np.column_stack((arr, arr))  # Make stereo
         sound = pygame.sndarray.make_sound(arr)
         sound.set_volume(0.5)
         return sound
@@ -116,7 +112,7 @@ total_jumps = 0
 total_deaths = 0
 total_play_time = 0
 start_time = time.time()
-game_state = "MENU"  # MENU, PLAYING, PAUSED, GAME_OVER, VICTORY
+game_state = "PLAYING"  # Skip menu, start directly
 menu_selection = 0
 difficulty = "NORMAL"  # EASY, NORMAL, HARD
 auto_start_timer = 180  # 3 seconds at 60 FPS
@@ -137,27 +133,33 @@ sound_effects = {
 }
 # Enhanced sound generation
 def create_jump_sound():
-    arr = [(int(32767 * math.sin(2 * math.pi * 400 * t / 44100))) for t in range(44100 // 10)]
+    arr = np.array([int(32767 * math.sin(2 * math.pi * 400 * t / 44100)) for t in range(44100 // 10)], dtype=np.int16)
+    arr = np.column_stack((arr, arr))  # Make stereo
     return pygame.sndarray.make_sound(arr)
 
 def create_land_sound():
-    arr = [(int(32767 * math.sin(2 * math.pi * 200 * t / 44100) * (1 - t / (44100 // 20)))) for t in range(44100 // 20)]
+    arr = np.array([int(32767 * math.sin(2 * math.pi * 200 * t / 44100) * (1 - t / (44100 // 20))) for t in range(44100 // 20)], dtype=np.int16)
+    arr = np.column_stack((arr, arr))  # Make stereo
     return pygame.sndarray.make_sound(arr)
 
 def create_coin_sound():
-    arr = [(int(32767 * math.sin(2 * math.pi * 800 * t / 44100) * (1 - t / (44100 // 15)))) for t in range(44100 // 15)]
+    arr = np.array([int(32767 * math.sin(2 * math.pi * 800 * t / 44100) * (1 - t / (44100 // 15))) for t in range(44100 // 15)], dtype=np.int16)
+    arr = np.column_stack((arr, arr))  # Make stereo
     return pygame.sndarray.make_sound(arr)
 
 def create_death_sound():
-    arr = [(int(32767 * math.sin(2 * math.pi * 150 * t / 44100) * (t / (44100 // 30)))) for t in range(44100 // 30)]
+    arr = np.array([int(32767 * math.sin(2 * math.pi * 150 * t / 44100) * (t / (44100 // 30))) for t in range(44100 // 30)], dtype=np.int16)
+    arr = np.column_stack((arr, arr))  # Make stereo
     return pygame.sndarray.make_sound(arr)
 
 def create_powerup_sound():
-    arr = [(int(32767 * math.sin(2 * math.pi * 600 * t / 44100) * math.sin(2 * math.pi * 3 * t / 44100))) for t in range(44100 // 20)]
+    arr = np.array([int(32767 * math.sin(2 * math.pi * 600 * t / 44100) * math.sin(2 * math.pi * 3 * t / 44100)) for t in range(44100 // 20)], dtype=np.int16)
+    arr = np.column_stack((arr, arr))  # Make stereo
     return pygame.sndarray.make_sound(arr)
 
 def create_combo_sound():
-    arr = [(int(32767 * math.sin(2 * math.pi * 1000 * t / 44100) * (1 - t / (44100 // 10)))) for t in range(44100 // 10)]
+    arr = np.array([int(32767 * math.sin(2 * math.pi * 1000 * t / 44100) * (1 - t / (44100 // 10))) for t in range(44100 // 10)], dtype=np.int16)
+    arr = np.column_stack((arr, arr))  # Make stereo
     return pygame.sndarray.make_sound(arr)
 
 # Initialize sound effects
@@ -289,9 +291,9 @@ class PowerUp:
         adjusted_rect = self.rect.copy()
         adjusted_rect.x -= camera_offset_x
         
-        # Animated power-up
-        pulse = abs(math.sin(self.animation_time * 0.1)) * 5
-        size = 15 + pulse
+        # Animated power-up circle removed
+        # pulse = abs(math.sin(self.animation_time * 0.1)) * 5
+        # size = 15 + pulse
         
         colors = {
             "speed": (255, 100, 100),
@@ -300,9 +302,9 @@ class PowerUp:
             "slow_motion": (100, 100, 255)
         }
         
-        color = colors.get(self.power_type, WHITE)
-        pygame.draw.circle(surface, color, adjusted_rect.center, int(size))
-        pygame.draw.circle(surface, WHITE, adjusted_rect.center, int(size), 2)
+        # color = colors.get(self.power_type, WHITE)
+        # pygame.draw.circle(surface, color, adjusted_rect.center, int(size))
+        # pygame.draw.circle(surface, WHITE, adjusted_rect.center, int(size), 2)
     
     def is_off_screen(self):
         return self.rect.right < 0
@@ -318,11 +320,11 @@ def generate_powerup():
 def draw_main_menu():
     screen.fill(BLACK)
     
-    # Animated background
-    for i in range(0, SCREEN_WIDTH, 50):
-        for j in range(0, SCREEN_HEIGHT, 50):
-            color = (i % 255, j % 255, (i + j) % 255)
-            pygame.draw.rect(screen, color, (i, j, 50, 50))
+    # Animated background squares removed
+    # for i in range(0, SCREEN_WIDTH, 50):
+    #     for j in range(0, SCREEN_HEIGHT, 50):
+    #         color = (i % 255, j % 255, (i + j) % 255)
+    #         pygame.draw.rect(screen, color, (i, j, 50, 50))
     
     # Title
     title_font = pygame.font.Font(None, 72)
@@ -423,10 +425,6 @@ ground = Ground()
 powerups = []
 active_powerups = []
 
-def cleanup_obstacles():
-    """Remove obstacles that are too far behind the player"""
-    global obstacles
-    obstacles = [obs for obs in obstacles if obs.rect.x > camera_offset_x - SCREEN_WIDTH]
 
 def spawn_manager(player_x, camera_offset_x):
     """Manage spawning of obstacles and collectibles"""
@@ -441,6 +439,7 @@ def spawn_manager(player_x, camera_offset_x):
         collectibles.append(generate_collectible())
 
 def reset_game():
+    print("reset_game() function called!")
     global game_over, score, distance, obstacles, collectibles, portals, boosts, camera_offset_x
     global current_speed, boost_timer, victory_timer, explosion_particles, obstacle_sequence
     global last_obstacle_x, portal_spawned, level, level_announcement_timer, high_score
@@ -466,6 +465,9 @@ def reset_game():
     for _ in range(3): obstacles.append(generate_obstacle())
     for _ in range(2): collectibles.append(generate_collectible())
 
+# Initialize game since we're skipping menu
+reset_game()
+
 # Game loop
 running = True
 while running:
@@ -480,13 +482,13 @@ while running:
     if game_state == "MENU":
         draw_main_menu()
         
-        # Auto-start after 3 seconds if no interaction
-        auto_start_timer -= 1
-        if auto_start_timer <= 0:
-            print("Auto-starting game...")
-            game_state = "PLAYING"
-            reset_game()
-            auto_start_timer = 180  # Reset timer
+        # Auto-start disabled for testing
+        # auto_start_timer -= 1
+        # if auto_start_timer <= 0:
+        #     print("Auto-starting game...")
+        #     game_state = "PLAYING"
+        #     reset_game()
+        #     auto_start_timer = 180  # Reset timer
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -538,12 +540,17 @@ while running:
                     elif event.key == pygame.K_DOWN:
                         menu_selection = (menu_selection + 1) % 3
                     elif event.key == pygame.K_RETURN:
+                        print(f"ENTER pressed in pause menu, menu_selection: {menu_selection}")
                         if menu_selection == 0:  # RESUME
+                            print("Resuming game...")
                             game_state = "PLAYING"
                         elif menu_selection == 1:  # RESTART
+                            print("Restarting game...")
                             reset_game()
                             game_state = "PLAYING"
+                            print("Game restarted!")
                         elif menu_selection == 2:  # MAIN MENU
+                            print("Going to main menu...")
                             game_state = "MENU"
         else:  # PLAYING state
             # Event handling
@@ -554,14 +561,10 @@ while running:
                     if event.key == pygame.K_ESCAPE:
                         game_state = "PAUSED"
                         menu_selection = 0
-                elif event.type == pygame.MOUSEBUTTONDOWN and game_over:
-                    if victory_timer > 0: 
-                        victory_timer = 0
-                        reset_game()
-                        game_state = "MENU"
-                    else:
-                        total_deaths += 1
-                        reset_game()
+            
+            # Update level announcement timer
+            if level_announcement_timer > 0:
+                level_announcement_timer -= 1
             
             if not game_over and level_announcement_timer == 0:
                 keys, mouse_pressed = pygame.key.get_pressed(), pygame.mouse.get_pressed()[0]
@@ -705,7 +708,7 @@ while running:
                     create_explosion(player.rect.centerx, player.rect.centery, 50, [RED, BLUE, GREEN, YELLOW, PURPLE, (255, 128, 0), (0, 255, 255)])
                     player.vel_y, player.vel_x = -15, 12
                     game_over = True
-                    apply_screen_shake(15)
+                    # apply_screen_shake(15)  # Removed end shake
                 
                 # Victory animation update
                 if victory_timer > 0:
@@ -726,7 +729,7 @@ while running:
                         create_explosion(player.rect.right, player.rect.centery, 20, [RED, ORANGE, YELLOW])
                         player.vel_x = 0
                         player.rect.right = SCREEN_WIDTH
-                        apply_screen_shake(20)
+                        # apply_screen_shake(20)  # Removed end shake
             
             # Apply screen shake to camera
             shake_offset_x = 0
@@ -734,6 +737,15 @@ while running:
             if screen_shake > 0:
                 shake_offset_x = random.randint(-screen_shake, screen_shake)
                 shake_offset_y = random.randint(-screen_shake, screen_shake)
+            
+            # Handle mouse clicks for game over restart (outside the event loop)
+            mouse_buttons = pygame.mouse.get_pressed()
+            if mouse_buttons[0] and game_over:  # Left click during game over
+                print("Mouse clicked during game over - restarting...")
+                total_deaths += 1
+                reset_game()
+                game_state = "PLAYING"
+                pygame.time.wait(200)  # Brief delay to prevent multiple clicks
             
             # Rendering
             # Background with screen shake
@@ -744,11 +756,11 @@ while running:
             final_bg_color = tuple(int(bg_color[i] * (1 - fade) + next_color[i] * fade) for i in range(3))
             screen.fill(final_bg_color)
             
-            # Draw background elements with shake
-            for i in range(0, SCREEN_WIDTH * 3, 100):
-                for j in range(0, SCREEN_HEIGHT - GROUND_HEIGHT, 100):
-                    star_color = (255, 255, 255, 100 + int(155 * math.sin(distance * 0.01 + i * 0.1 + j * 0.1)))
-                    pygame.draw.circle(screen, WHITE[:3], (i - camera_offset_x // 2 + shake_offset_x, j + shake_offset_y), 2)
+            # Background stars removed (tiny circles)
+            # for i in range(0, SCREEN_WIDTH * 3, 100):
+            #     for j in range(0, SCREEN_HEIGHT - GROUND_HEIGHT, 100):
+            #         star_color = (255, 255, 255, 100 + int(155 * math.sin(distance * 0.01 + i * 0.1 + j * 0.1)))
+            #         pygame.draw.circle(screen, WHITE[:3], (i - camera_offset_x // 2 + shake_offset_x, j + shake_offset_y), 2)
             
             # Draw ground with shake
             ground_rect = ground.rect.copy()
@@ -768,14 +780,14 @@ while running:
             for collectible in collectibles:
                 collectible.draw(screen, camera_offset_x - shake_offset_x)
             
-            # Draw particles with shake
-            for particle in particles + trail_particles:
-                alpha = particle['life'] / particle['max_life']
-                size = int(particle['size'] * alpha)
-                if size > 0:
-                    pygame.draw.circle(screen, particle['color'], 
-                                      (int(particle['x'] - camera_offset_x + shake_offset_x), 
-                                       int(particle['y'] + shake_offset_y)), size)
+            # Draw particles with shake - circles removed
+            # for particle in particles + trail_particles:
+            #     alpha = particle['life'] / particle['max_life']
+            #     size = int(particle['size'] * alpha)
+            #     if size > 0:
+            #         pygame.draw.circle(screen, particle['color'], 
+            #                           (int(particle['x'] - camera_offset_x + shake_offset_x), 
+            #                            int(particle['y'] + shake_offset_y)), size)
             
             # Draw player with shake
             player.draw(screen, camera_offset_x - shake_offset_x)

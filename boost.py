@@ -32,17 +32,17 @@ class Boost(pygame.sprite.Sprite):
             # Animated glowing effect
             glow_size = int(8 + 4 * abs(pygame.math.Vector2(1, 0).rotate(self.animation_frame * 100).x))
             
-            # Outer glow
-            for i in range(3):
-                alpha = 100 - i * 30
-                size = glow_size + i * 3
-                glow_surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
-                pygame.draw.circle(glow_surf, (255, 255, 255, alpha), (size, size), size)
-                self.image.blit(glow_surf, (15 - size, 15 - size))
+            # Animated glow effect - circles removed
+            # for i in range(3):
+            #     alpha = 100 - i * 30
+            #     size = 20 + i * 8 + int(math.sin(self.animation_frame * 0.1 + i) * 3)
+            #     glow_surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
+            #     pygame.draw.circle(glow_surf, (255, 255, 255, alpha), (size, size), size)
+            #     self.image.blit(glow_surf, (15 - size, 15 - size))
             
-            # Inner bright circle
-            pygame.draw.circle(self.image, WHITE, (15, 15), 6)
-            pygame.draw.circle(self.image, (200, 200, 255), (15, 15), 4)
+            # Inner bright circle - removed
+            # pygame.draw.circle(self.image, WHITE, (15, 15), 6)
+            # pygame.draw.circle(self.image, (200, 200, 255), (15, 15), 4)
     
     def is_off_screen(self):
         """Check if boost is off-screen to the left"""
