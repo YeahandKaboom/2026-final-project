@@ -291,9 +291,9 @@ class PowerUp:
         adjusted_rect = self.rect.copy()
         adjusted_rect.x -= camera_offset_x
         
-        # Animated power-up circle removed
-        # pulse = abs(math.sin(self.animation_time * 0.1)) * 5
-        # size = 15 + pulse
+        # Animated power-up circles restored
+        pulse = abs(math.sin(self.animation_time * 0.1)) * 5
+        size = 15 + pulse
         
         colors = {
             "speed": (255, 100, 100),
@@ -302,9 +302,9 @@ class PowerUp:
             "slow_motion": (100, 100, 255)
         }
         
-        # color = colors.get(self.power_type, WHITE)
-        # pygame.draw.circle(surface, color, adjusted_rect.center, int(size))
-        # pygame.draw.circle(surface, WHITE, adjusted_rect.center, int(size), 2)
+        color = colors.get(self.power_type, WHITE)
+        pygame.draw.circle(surface, color, adjusted_rect.center, int(size))
+        pygame.draw.circle(surface, WHITE, adjusted_rect.center, int(size), 2)
     
     def is_off_screen(self):
         return self.rect.right < 0
