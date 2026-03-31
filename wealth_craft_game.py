@@ -5,42 +5,59 @@ Mine massive wealth in an epic world of treasures!
 """
 
 import pygame
-import random
 import math
-import json
-import time
+import random
+import sys
 from enum import Enum
 from collections import defaultdict
-from simple_enhancements import Enemy, NPC, PowerUp, Quest, Structure, Pet, WeatherSystem, AchievementSystem
+from epic_boss_system import Boss, SpecialEffect
+from ultimate_world_generation import WorldGenerator, BiomeType, TerrainType, StructureType
+from fun_villages import Village, VillageType, RubyHill, BitcoinMine
 
 # Screen settings
 SCREEN_WIDTH = 1400
 SCREEN_HEIGHT = 900
 FPS = 60
 
-# Colors
+# Colors - VIBRANT AND FUN!
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+BLUE = (0, 100, 255)
 YELLOW = (255, 255, 0)
 ORANGE = (255, 165, 0)
 PURPLE = (128, 0, 128)
-CYAN = (0, 255, 255)
 PINK = (255, 192, 203)
-BROWN = (139, 69, 19)
+CYAN = (0, 255, 255)
+LIME = (50, 205, 50)
 GOLD = (255, 215, 0)
-DARK_RED = (139, 0, 0)
-RUBY_RED = (224, 17, 95)
-EMERALD_GREEN = (0, 201, 87)
+RUBY_RED = (220, 20, 60)
+EMERALD_GREEN = (0, 100, 0)
 DIAMOND_BLUE = (185, 242, 255)
-LAVA_RED = (255, 100, 0)
-VOLCANO_BROWN = (101, 67, 33)
+SAPPHIRE_BLUE = (15, 82, 186)
+AMETHYST_PURPLE = (153, 102, 204)
+CRYSTAL_WHITE = (255, 255, 255)
+RAINBOW_COLORS = [(255, 0, 0), (255, 127, 0), (255, 255, 0), (0, 255, 0), (0, 0, 255), (75, 0, 130), (148, 0, 211)]
+BITCOIN_ORANGE = (247, 147, 26)
+BITCOIN_GOLD = (255, 203, 0)
+
+# Fun colors
 SKY_BLUE = (135, 206, 235)
-GRAY = (128, 128, 128)
-DARK_GRAY = (64, 64, 64)
-LIGHT_GRAY = (192, 192, 192)
+SUNNY_YELLOW = (255, 255, 224)
+GRASS_GREEN = (34, 139, 34)
+MOUNTAIN_BROWN = (139, 90, 43)
+VOLCANO_RED = (178, 34, 34)
+LAVA_GLOW = (255, 69, 0)
+WATER_BLUE = (64, 164, 223)
+SAND_TAN = (238, 203, 173)
+SNOW_WHITE = (255, 250, 250)
+SWAMP_GREEN = (85, 107, 47)
+MYSTICAL_PURPLE = (147, 112, 219)
+CRYSTAL_PINK = (255, 182, 193)
+UNDERWORLD_BLACK = (25, 25, 25)
+SKY_ISLAND_BLUE = (173, 216, 230)
+LIGHT_GRAY = (192, 192, 192)  # Missing color!
 
 # Game states
 class GameState(Enum):
@@ -49,72 +66,52 @@ class GameState(Enum):
     SHOP = 2
     UNDERGROUND = 3
 
-# Gem types
+# Gem types - EXPANDED WITH BITCOIN!
 class GemType(Enum):
-    RUBY = 1
-    EMERALD = 2
-    DIAMOND = 3
-    GOLD = 4
-    SAPPHIRE = 5
-    AMETHYST = 6
-    CRYSTAL = 7
-    RARE_CRYSTAL = 8
-
-# Biome types
-class BiomeType(Enum):
-    FOREST = 1
-    DESERT = 2
-    SNOW = 3
-    MOUNTAINS = 4
-    SWAMP = 5
-    VOLCANIC = 6
-    MYSTICAL = 7
-
-# Weather types
-class WeatherType(Enum):
-    CLEAR = 1
-    RAIN = 2
-    SNOW = 3
-    STORM = 4
-    FOG = 5
-
-# Achievement types
-class AchievementType(Enum):
-    FIRST_GEM = 1
-    WEALTHY = 2
-    MINER = 3
-    EXPLORER = 4
-    COMBAT_MASTER = 5
-    COLLECTOR = 6
-    SPEED_MINER = 7
-    RARE_HUNTER = 8
-
-# Quest types
-class QuestType(Enum):
-    COLLECT_GEMS = 1
-    MINE_BLOCKS = 2
-    REACH_LEVEL = 3
-    FIND_CAVE = 4
-    COLLECT_WEALTH = 5
-    SURVIVE_TIME = 6
-
-# Enemy types
-class EnemyType(Enum):
-    GOBLIN = 1
-    ROCK_MONSTER = 2
-    CREEPER = 3
-    DRAGON = 4
-    GHOST = 5
-    SPIDER = 6
-
-# Power-up types
-class PowerUpType(Enum):
-    SPEED_BOOST = 1
-    DOUBLE_WEALTH = 2
-    INSTANT_MINE = 3
-    MAGNET_BOOST = 4
-    SHIELD = 5
-    XRAY_VISION = 6
+    RUBY = 0
+    EMERALD = 1
+    DIAMOND = 2
+    GOLD = 3
+    SAPPHIRE = 4
+    AMETHYST = 5
+    CRYSTAL = 6
+    RARE_CRYSTAL = 7
+    ANCIENT_GEM = 8
+    RAINBOW_GEM = 9
+    DRAGON_GEM = 10
+    COSMIC_GEM = 11
+    QUANTUM_GEM = 12
+    INFINITY_GEM = 13
+    BITCOIN = 14  # NEW! BITCOIN GEM!
+    
+# Special effects
+class EffectType(Enum):
+    EXPLOSION = 0
+    LIGHTNING = 1
+    FIRE = 2
+    ICE = 3
+    POISON = 4
+    HEAL = 5
+    TELEPORT = 6
+    TIME_WARP = 7
+    BLACK_HOLE = 8
+    
+# Boss types
+class BossType(Enum):
+    CRYSTAL_GOLEM = 0
+    SHADOW_DRAGON = 1
+    QUANTUM_BEAST = 2
+    COSMIC_TITAN = 3
+    INFINITY_WARRIOR = 4
+    
+# Vehicle types
+class VehicleType(Enum):
+    MINECART = 0
+    DRILL_MACHINE = 1
+    FLYING_SHIP = 2
+    TELEPORTER = 3
+    TIME_MACHINE = 4
+    QUANTUM_PORTAL = 5
 
 # Upgrade types
 class UpgradeType(Enum):
@@ -207,16 +204,23 @@ class Gem:
         self.glow_timer = 0
         self.rotation = 0
         
-        # Gem properties
+        # Gem properties - EPIC EXPANSION WITH BITCOIN!
         self.properties = {
-            GemType.RUBY: {"color": RUBY_RED, "value": 100, "name": "Ruby"},
-            GemType.EMERALD: {"color": EMERALD_GREEN, "value": 200, "name": "Emerald"},
-            GemType.DIAMOND: {"color": DIAMOND_BLUE, "value": 500, "name": "Diamond"},
-            GemType.GOLD: {"color": GOLD, "value": 50, "name": "Gold"},
-            GemType.SAPPHIRE: {"color": BLUE, "value": 300, "name": "Sapphire"},
-            GemType.AMETHYST: {"color": PURPLE, "value": 400, "name": "Amethyst"},
-            GemType.CRYSTAL: {"color": WHITE, "value": 600, "name": "Crystal"},
-            GemType.RARE_CRYSTAL: {"color": LIGHT_GRAY, "value": 1000, "name": "Rare Crystal"}
+            GemType.RUBY: {"color": RUBY_RED, "value": 100, "name": "Ruby", "rarity": 1, "effect": None},
+            GemType.EMERALD: {"color": EMERALD_GREEN, "value": 200, "name": "Emerald", "rarity": 2, "effect": None},
+            GemType.DIAMOND: {"color": DIAMOND_BLUE, "value": 500, "name": "Diamond", "rarity": 3, "effect": None},
+            GemType.GOLD: {"color": GOLD, "value": 50, "name": "Gold", "rarity": 1, "effect": None},
+            GemType.SAPPHIRE: {"color": BLUE, "value": 300, "name": "Sapphire", "rarity": 2, "effect": None},
+            GemType.AMETHYST: {"color": PURPLE, "value": 400, "name": "Amethyst", "rarity": 3, "effect": None},
+            GemType.CRYSTAL: {"color": WHITE, "value": 600, "name": "Crystal", "rarity": 4, "effect": None},
+            GemType.RARE_CRYSTAL: {"color": LIGHT_GRAY, "value": 1000, "name": "Rare Crystal", "rarity": 5, "effect": None},
+            GemType.ANCIENT_GEM: {"color": (139, 69, 19), "value": 2000, "name": "Ancient Gem", "rarity": 6, "effect": "heal"},
+            GemType.RAINBOW_GEM: {"color": (255, 0, 255), "value": 5000, "name": "Rainbow Gem", "rarity": 7, "effect": "rainbow"},
+            GemType.DRAGON_GEM: {"color": (255, 140, 0), "value": 10000, "name": "Dragon Gem", "rarity": 8, "effect": "fire"},
+            GemType.COSMIC_GEM: {"color": (75, 0, 130), "value": 25000, "name": "Cosmic Gem", "rarity": 9, "effect": "cosmic"},
+            GemType.QUANTUM_GEM: {"color": (0, 255, 255), "value": 50000, "name": "Quantum Gem", "rarity": 10, "effect": "quantum"},
+            GemType.INFINITY_GEM: {"color": (255, 255, 255), "value": 100000, "name": "Infinity Gem", "rarity": 11, "effect": "infinity"},
+            GemType.BITCOIN: {"color": BITCOIN_ORANGE, "value": 777777, "name": "₿ BITCOIN ₿", "rarity": 12, "effect": "bitcoin"}  # NEW!
         }
         
     def update(self):
@@ -231,12 +235,49 @@ class Gem:
         draw_x = self.x - camera_x
         draw_y = self.y - camera_y
         
+        # EPIC VISUAL EFFECTS!
         props = self.properties[self.type]
         
-        # Glowing aura effect
-        glow_size = self.size + int(8 * math.sin(self.glow_timer * 0.1))
-        glow_color = (*props["color"], 50)
-        pygame.draw.circle(screen, glow_color, (int(draw_x), int(draw_y)), glow_size)
+        # Glowing aura for rare gems
+        if props["rarity"] >= 5:
+            glow_size = 20 + props["rarity"] * 3
+            glow_alpha = 50 + abs(math.sin(self.glow_timer * 0.1)) * 30
+            for i in range(3):
+                pygame.draw.circle(screen, (*props["color"], glow_alpha // (i+1)), 
+                                 (int(draw_x + 10), int(draw_y + 10)), 
+                                 glow_size + i * 5, 1)
+        
+        # Rotating rainbow effect for rainbow gem
+        if self.type == GemType.RAINBOW_GEM:
+            rainbow_colors = [(255, 0, 0), (255, 127, 0), (255, 255, 0), (0, 255, 0), 
+                             (0, 0, 255), (75, 0, 130), (148, 0, 211)]
+            color_index = int(self.animation_frame / 10) % len(rainbow_colors)
+            pygame.draw.circle(screen, rainbow_colors[color_index], (int(draw_x + 10), int(draw_y + 10)), 12)
+        
+        # Pulsing effect for infinity gem
+        elif self.type == GemType.INFINITY_GEM:
+            pulse = abs(math.sin(self.animation_frame * 0.2))
+            size = int(8 + pulse * 8)
+            pygame.draw.circle(screen, props["color"], (int(draw_x + 10), int(draw_y + 10)), size)
+            # Infinity symbol
+            pygame.draw.arc(screen, BLACK, (draw_x + 2, draw_y + 6, 6, 8), 0, math.pi, 2)
+            pygame.draw.arc(screen, BLACK, (draw_x + 12, draw_y + 6, 6, 8), math.pi, 2 * math.pi, 2)
+        
+        # Special effects for other rare gems
+        elif props["rarity"] >= 6:
+            # Sparkle particles
+            for _ in range(3):
+                spark_x = draw_x + 10 + random.randint(-15, 15)
+                spark_y = draw_y + 10 + random.randint(-15, 15)
+                pygame.draw.circle(screen, WHITE, (int(spark_x), int(spark_y)), 1)
+            pygame.draw.circle(screen, props["color"], (int(draw_x + 10), int(draw_y + 10)), 10)
+        
+        else:
+            # Normal gem drawing
+            pygame.draw.circle(screen, props["color"], (int(draw_x + 10), int(draw_y + 10)), 8)
+        
+        # Border
+        pygame.draw.circle(screen, BLACK, (int(draw_x + 10), int(draw_y + 10)), 8, 1)
         
         # Gem core with rotation
         core_size = self.size
@@ -274,8 +315,6 @@ class WealthCraftGame:
         self.player_on_ground = False
         
         # Wealth
-        self.gems = []
-        self.spawn_gems()
         self.wealth = 0
         self.rubies = 0
         self.emeralds = 0
@@ -288,96 +327,6 @@ class WealthCraftGame:
         self.exp_to_next_level = 100
         self.total_earned = 0
         
-        # New systems
-        self.current_biome = BiomeType.FOREST
-        self.current_weather = WeatherType.CLEAR
-        self.weather_timer = 0
-        self.time_of_day = 0  # 0-2400 for 24 hour cycle
-        self.day_night_speed = 1
-        
-        # Achievements
-        self.achievements = {achievement: False for achievement in AchievementType}
-        self.achievement_notifications = []
-        
-        # Quests
-        self.active_quests = []
-        self.completed_quests = []
-        self.quest_progress = {}
-        
-        # Combat
-        self.player_health = 100
-        self.player_max_health = 100
-        self.combat_mode = False
-        self.enemies = []
-        self.player_damage = 10
-        self.shield_active = False
-        self.shield_timer = 0
-        
-        # Power-ups
-        self.active_powerups = {}
-        self.speed_boost = 1
-        self.wealth_multiplier = 1
-        self.instant_mine = False
-        self.magnet_boost = 1
-        self.xray_vision = False
-        
-        # Visual enhancements
-        self.player_color = BLUE
-        self.character_outfit = "basic"
-        self.particle_effects = []
-        self.animation_timer = 0
-        self.particles = []  # Add missing particles list
-        
-        # World expansion
-        self.explored_areas = set()
-        self.structures = []
-        self.npcs = []
-        self.vehicles = []
-        self.pets = []
-        
-        # Save system (moved after owned_tools is defined)
-        # self.save_data will be initialized after owned_tools
-        
-        # Enhancement systems
-        self.achievement_system = AchievementSystem()
-        self.weather_system = WeatherSystem()
-        self.powerups = []
-        self.powerup_properties = {
-            "speed_boost": {"color": (255, 255, 0), "duration": 10000},
-            "double_wealth": {"color": (255, 215, 0), "duration": 15000},
-            "instant_mine": {"color": (255, 100, 255), "duration": 8000},
-            "magnet_boost": {"color": (100, 255, 255), "duration": 12000},
-            "shield": {"color": (100, 100, 255), "duration": 20000},
-            "xray_vision": {"color": (255, 255, 100), "duration": 10000}
-        }
-        self.quest_notifications = []
-        self.total_mined = 0
-        self.enemies_defeated = 0
-        
-        # Initialize enhancement systems
-        self.enemies = []
-        self.npcs = []
-        self.structures = []
-        self.pets = []
-        self.active_quests = []
-        self.completed_quests = []
-        self.active_powerups = {}
-        self.shield_active = False
-        self.shield_timer = 0
-        self.speed_boost = 1
-        self.wealth_multiplier = 1
-        self.instant_mine = False
-        self.magnet_boost = 1
-        self.xray_vision = False
-        self.time_of_day = 0
-        self.day_night_speed = 1
-        self.explored_areas = set()
-        self.player_health = 100
-        self.player_max_health = 100
-        
-        # Save system (now after owned_tools is defined)
-        # self.save_data will be initialized after owned_tools
-        
         # Mining
         self.pickaxe_power = 1
         self.mining_speed = 1
@@ -388,460 +337,83 @@ class WealthCraftGame:
         self.last_mine_time = 0
         
         # World
-        self.world_width = 60
-        self.world_height = 40
-        self.blocks = [[0 for _ in range(self.world_height)] for _ in range(self.world_width)]
-        self.generate_world()
+        self.world_width = 100  # Much bigger world!
+        self.world_height = 80
+        self.world_generator = WorldGenerator(self.world_width, self.world_height)
+        self.world_generator.generate_world()
+        self.blocks = self.world_generator.blocks
+        self.biomes = self.world_generator.biomes
+        self.structures = self.world_generator.structures
+        self.cave_systems = self.world_generator.cave_systems
+        self.ore_deposits = self.world_generator.ore_deposits
+        self.treasure_chests = self.world_generator.treasure_chests
+        self.dungeons = self.world_generator.dungeons
+        self.volcanoes = self.world_generator.volcanoes
+        self.mountains = self.world_generator.mountains
         
-        # Camera
+        # World features from INSANE WORLD GENERATION!
+        self.current_biome = BiomeType.FOREST
+        self.discovered_areas = set()
+        self.mining_depth = 0
+        self.underground_level = 0
         self.camera_x = 0
         self.camera_y = 0
         
-        # Quests will be checked in update loop
-    
-    def update(self):
-        # Update all enhancement systems
-        self.update_all_systems()
+        # 🌟 INSANE WORLD FEATURES!
+        self.rainbow_bridges = self.world_generator.rainbow_bridges
+        self.quantum_portals = self.world_generator.quantum_portals
+        self.cosmic_observatories = self.world_generator.cosmic_observatories
+        self.time_temples = self.world_generator.time_temples
+        self.soul_altars = self.world_generator.soul_altars
+        self.star_gates = self.world_generator.star_gates
+        self.void_anchors = self.world_generator.void_anchors
+        self.infinity_forges = self.world_generator.infinity_forges
+        self.blood_altars = self.world_generator.blood_altars
+        self.elemental_shrines = self.world_generator.elemental_shrines
+        self.dimensional_rifts = self.world_generator.dimensional_rifts
+        self.dragon_lairs = self.world_generator.dragon_lairs
+        self.bitcoin_exchanges = self.world_generator.bitcoin_exchanges
+        self.rainbow_valleys = self.world_generator.rainbow_valleys
+        self.time_distorted_areas = self.world_generator.time_distorted_areas
+        self.quantum_fields = self.world_generator.quantum_fields
+        self.cosmic_realms = self.world_generator.cosmic_realms
         
-        # Update player
-        keys = pygame.key.get_pressed()
+        # Gems
+        self.gems = []
+        self.spawn_gems()
         
-        # Player movement with speed boost
-        actual_speed = self.player_speed * self.speed_boost
+        # Particles
+        self.particles = []
         
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.player_x -= actual_speed
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.player_x += actual_speed
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            if self.player_on_ground:
-                self.player_vel_y = -self.player_jump_power
-                self.player_on_ground = False
-                
-        # Apply gravity
-        self.player_vel_y += 0.5
-        self.player_y += self.player_vel_y
+        # EPIC BOSS SYSTEM!
+        self.bosses = []
+        self.current_boss = None
+        self.boss_battle_active = False
+        self.boss_spawn_timer = 0
+        self.boss_defeated_count = 0
+        self.special_effects = []
+        self.ultimate_mode = False
+        self.ultimate_mode_timer = 0
         
-        # Ground collision
-        if self.player_y >= SCREEN_HEIGHT - 100 - self.player_height:
-            self.player_y = SCREEN_HEIGHT - 100 - self.player_height
-            self.player_vel_y = 0
-            self.player_on_ground = True
-            
-        # World boundaries
-        self.player_x = max(0, min(self.player_x, self.world_width * 40 - self.player_width))
+        # Boss spawn conditions
+        self.next_boss_spawn_wealth = 10000  # First boss at 10k wealth
+        self.boss_difficulty_multiplier = 1.5
         
-        # Update camera
-        self.camera_x = max(0, min(self.player_x - SCREEN_WIDTH // 2, self.world_width * 40 - SCREEN_WIDTH))
+        # Boss notifications
+        self.boss_notification = ""
+        self.boss_notification_timer = 0
         
-        # Auto-mining with instant mine power-up
-        if self.auto_mine:
-            if self.instant_mine:
-                base_speed = 100  # Instant mining
-            else:
-                base_speed = self.mining_speed * self.mining_multiplier
-                
-            if self.mining_combo > 0:
-                combo_bonus = 1 + (self.mining_combo * 0.2)
-                base_speed *= combo_bonus
-                
-            self.mine_progress += base_speed
-            
-            # Combo timing
-            current_time = pygame.time.get_ticks()
-            if current_time - self.last_mine_time < 1000:
-                self.mining_combo += 1
-            else:
-                self.mining_combo = 0
-            self.last_mine_time = current_time
-            
-            if self.mine_progress >= 100:
-                self.mine_progress = 0
-                
-                # Earn wealth with multipliers
-                base_earned = self.pickaxe_power * 25
-                total_earned = int(base_earned * self.mining_multiplier * self.wealth_multiplier)
-                if self.mining_combo > 5:
-                    total_earned *= 2
-                    
-                self.wealth += total_earned
-                self.total_earned += total_earned
-                self.total_mined += 1
-                self.gain_experience(total_earned // 5)
-                
-                # EPIC mining particles
-                particle_count = self.pickaxe_power * 5
-                if self.mining_combo > 5:
-                    particle_count *= 2
-                    
-                for _ in range(particle_count):
-                    particle = Particle(
-                        self.player_x + self.player_width // 2 + random.randint(-30, 30),
-                        self.player_y + self.player_height // 2 + random.randint(-30, 30),
-                        random.uniform(-8, 8),
-                        random.uniform(-15, -5),
-                        (255, 215, 0),
-                        random.randint(5, 15),
-                        random.randint(30, 60)
-                    )
-                    self.particles.append(particle)
-                        
-        # Update gems
-        for gem in self.gems[:]:
-            gem.update()
-            
-            # Check collection with magnetic boost
-            gem_rect = pygame.Rect(gem.x - 10, gem.y - 10, 20, 20)
-            player_rect = pygame.Rect(self.player_x, self.player_y, self.player_width, self.player_height)
-            
-            # Magnetic collection radius with boost
-            collection_radius = 80 * self.magnet_boost
-            player_center = (self.player_x + self.player_width // 2, self.player_y + self.player_height // 2)
-            gem_center = (gem.x, gem.y)
-            
-            # Calculate distance
-            distance = math.sqrt((player_center[0] - gem_center[0])**2 + (player_center[1] - gem_center[1])**2)
-            
-            # Magnetic pull effect
-            if distance < collection_radius:
-                # Pull gem toward player
-                pull_strength = 5 * self.magnet_boost
-                dx = player_center[0] - gem_center[0]
-                dy = player_center[1] - gem_center[1]
-                
-                if distance > 0:
-                    gem.x += (dx / distance) * pull_strength
-                    gem.y += (dy / distance) * pull_strength
-            
-            # Collection detection
-            if distance < 40 or gem_rect.colliderect(player_rect):
-                gem.collected = True
-                props = gem.properties[gem.type]
-                
-                if gem.type == GemType.RUBY:
-                    self.rubies += 1
-                    self.wealth += props["value"]
-                elif gem.type == GemType.EMERALD:
-                    self.emeralds += 1
-                    self.wealth += props["value"]
-                elif gem.type == GemType.DIAMOND:
-                    self.diamonds += 1
-                    self.wealth += props["value"]
-                elif gem.type == GemType.GOLD:
-                    self.gold += 1
-                    self.wealth += props["value"]
-                elif gem.type == GemType.SAPPHIRE:
-                    self.wealth += props["value"]
-                elif gem.type == GemType.AMETHYST:
-                    self.wealth += props["value"]
-                elif gem.type == GemType.CRYSTAL:
-                    self.wealth += props["value"]
-                elif gem.type == GemType.RARE_CRYSTAL:
-                    self.wealth += props["value"]
-                        
-                # Apply wealth multiplier
-                self.wealth = int(self.wealth * self.wealth_multiplier)
-                self.total_earned += props["value"]
-                self.gain_experience(props["value"] // 5)
-                
-                # Collection particles
-                for _ in range(15):
-                    particle = Particle(
-                        gem.x,
-                        gem.y,
-                        random.uniform(-8, 8),
-                        random.uniform(-10, -2),
-                        props["color"],
-                        random.randint(5, 12),
-                        random.randint(30, 60)
-                    )
-                    self.particles.append(particle)
-                        
-        # Update particles
-        for particle in self.particles[:]:
-            particle.update()
-            if particle.life <= 0:
-                self.particles.remove(particle)
-    
-    def update_all_systems(self):
-        """Update all game systems"""
-        # Update weather
-        self.weather_system.update()
+        # Player health
+        self.player_health = 100
+        self.player_max_health = 100
         
-        # Update day/night cycle
-        self.update_day_night_cycle()
+        # FUN VILLAGES AND SPECIAL LOCATIONS!
+        self.villages = []
+        self.ruby_hills = []
+        self.bitcoin_mines = []
+        self.generate_fun_locations()
         
-        # Update enemies
-        for enemy in self.enemies[:]:
-            enemy.update(self.player_x, self.player_y)
-            
-            # Check collision with player
-            enemy_rect = pygame.Rect(enemy.x, enemy.y, 30, 30)
-            player_rect = pygame.Rect(self.player_x, self.player_y, self.player_width, self.player_height)
-            
-            if enemy_rect.colliderect(player_rect):
-                if not self.shield_active:
-                    self.player_health -= enemy.damage
-                    if self.player_health <= 0:
-                        self.player_health = 0
-                        # Handle game over
-                        
-        # Update NPCs
-        for npc in self.npcs:
-            npc.update()
-            
-        # Update power-ups
-        self.update_powerups()
-        self.spawn_powerups()
-        
-        for powerup in self.powerups[:]:
-            powerup.update()
-            
-            # Check collection
-            powerup_rect = pygame.Rect(powerup.x, powerup.y, 20, 20)
-            player_rect = pygame.Rect(self.player_x, self.player_y, self.player_width, self.player_height)
-            
-            if powerup_rect.colliderect(player_rect) and not powerup.collected:
-                powerup.collected = True
-                self.activate_powerup(powerup.type)
-                self.powerups.remove(powerup)
-                
-        # Update pets
-        for pet in self.pets:
-            pet.update(self.player_x, self.player_y)
-            
-        # Update achievements
-        self.achievement_system.update()
-        self.achievement_system.check_achievement("first_gem", self)
-        self.achievement_system.check_achievement("wealthy", self)
-        self.achievement_system.check_achievement("miner", self)
-        
-        # Update quests
-        self.check_quests()
-    
-    def spawn_enemies(self):
-        """Spawn enemies in the world"""
-        enemy_types = ["goblin", "rock_monster", "creeper", "dragon", "ghost", "spider"]
-        
-        for _ in range(10):  # Spawn 10 enemies
-            enemy_type = random.choice(enemy_types)
-            x = random.randint(100, SCREEN_WIDTH - 100)
-            y = random.randint(100, SCREEN_HEIGHT - 200)
-            self.enemies.append(Enemy(x, y, enemy_type))
-        
-    def create_npcs(self):
-        """Create NPC characters"""
-        # Create shopkeeper
-        self.npcs.append(NPC(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, "shopkeeper"))
-        
-        # Create quest giver
-        self.npcs.append(NPC(100, 100, "quest_giver"))
-        
-        # Create random villagers
-        for _ in range(3):
-            x = random.randint(50, SCREEN_WIDTH - 50)
-            y = random.randint(50, SCREEN_HEIGHT - 50)
-            self.npcs.append(NPC(x, y, "villager"))
-        
-    def generate_structures(self):
-        """Generate buildings and structures"""
-        structure_types = ["house", "shop", "factory"]
-        
-        for _ in range(5):
-            structure_type = random.choice(structure_types)
-            x = random.randint(100, SCREEN_WIDTH - 100)
-            y = random.randint(100, SCREEN_HEIGHT - 200)
-            self.structures.append(Structure(x, y, structure_type))
-        
-    def generate_initial_quests(self):
-        """Generate starting quests"""
-        # Add collect gems quest
-        quest1 = Quest(
-            "collect_gems",
-            10,
-            {"wealth": 200, "experience": 100},
-            "Collect 10 gems"
-        )
-        self.active_quests.append(quest1)
-        
-        # Add reach level quest
-        quest2 = Quest(
-            "reach_level",
-            3,
-            {"wealth": 500, "experience": 200},
-            "Reach level 3"
-        )
-        self.active_quests.append(quest2)
-        
-        # Add mine blocks quest
-        quest3 = Quest(
-            "mine_blocks",
-            50,
-            {"wealth": 300, "experience": 150},
-            "Mine 50 blocks"
-        )
-        self.active_quests.append(quest3)
-    
-    def update_day_night_cycle(self):
-        """Update time of day"""
-        self.time_of_day += self.day_night_speed
-        if self.time_of_day >= 2400:
-            self.time_of_day = 0
-        
-    def get_sky_color(self):
-        """Get sky color based on time of day"""
-        if 600 <= self.time_of_day <= 1800:  # Daytime
-            return (135, 206, 235)  # Sky blue
-        elif 1800 < self.time_of_day <= 2000:  # Sunset
-            return (255, 150, 100)
-        elif 2000 < self.time_of_day <= 600:  # Night
-            return (25, 25, 112)
-        else:  # Sunrise
-            return (255, 200, 150)
-    
-    def spawn_powerups(self):
-        """Spawn random power-ups"""
-        if random.randint(1, 1000) == 1:  # 0.1% chance per frame
-            powerup_types = ["speed_boost", "double_wealth", "instant_mine", "magnet_boost", "shield", "xray_vision"]
-            powerup_type = random.choice(powerup_types)
-            x = random.randint(50, SCREEN_WIDTH - 50)
-            y = random.randint(50, SCREEN_HEIGHT - 50)
-            self.powerups.append(PowerUp(x, y, powerup_type))
-    
-    def update_powerups(self):
-        """Update active power-ups"""
-        current_time = pygame.time.get_ticks()
-        
-        # Remove expired power-ups
-        expired_powerups = []
-        for powerup_type, start_time in self.active_powerups.items():
-            duration = self.powerup_properties[powerup_type]["duration"]
-            if current_time - start_time > duration:
-                expired_powerups.append(powerup_type)
-                
-        for powerup_type in expired_powerups:
-            del self.active_powerups[powerup_type]
-            self.deactivate_powerup(powerup_type)
-    
-    def activate_powerup(self, powerup_type):
-        """Activate a power-up effect"""
-        current_time = pygame.time.get_ticks()
-        self.active_powerups[powerup_type] = current_time
-        
-        if powerup_type == "speed_boost":
-            self.speed_boost = 2
-        elif powerup_type == "double_wealth":
-            self.wealth_multiplier = 2
-        elif powerup_type == "instant_mine":
-            self.instant_mine = True
-        elif powerup_type == "magnet_boost":
-            self.magnet_boost = 2
-        elif powerup_type == "shield":
-            self.shield_active = True
-        elif powerup_type == "xray_vision":
-            self.xray_vision = True
-    
-    def deactivate_powerup(self, powerup_type):
-        """Deactivate a power-up effect"""
-        if powerup_type == "speed_boost":
-            self.speed_boost = 1
-        elif powerup_type == "double_wealth":
-            self.wealth_multiplier = 1
-        elif powerup_type == "instant_mine":
-            self.instant_mine = False
-        elif powerup_type == "magnet_boost":
-            self.magnet_boost = 1
-        elif powerup_type == "shield":
-            self.shield_active = False
-        elif powerup_type == "xray_vision":
-            self.xray_vision = False
-    
-    def check_quests(self):
-        """Check quest progress"""
-        for quest in self.active_quests[:]:
-            if quest.type == "collect_gems":
-                total_gems = self.rubies + self.emeralds + self.diamonds + self.gold
-                if quest.update_progress(total_gems - quest.progress):
-                    self.complete_quest(quest)
-            elif quest.type == "reach_level":
-                if self.level >= quest.target:
-                    quest.completed = True
-                    self.complete_quest(quest)
-            elif quest.type == "mine_blocks":
-                if quest.update_progress(self.total_mined - quest.progress):
-                    self.complete_quest(quest)
-    
-    def complete_quest(self, quest):
-        """Complete a quest and give rewards"""
-        self.active_quests.remove(quest)
-        self.completed_quests.append(quest)
-        
-        # Give rewards
-        self.wealth += quest.reward["wealth"]
-        self.gain_experience(quest.reward["experience"])
-        
-        # Show completion message
-        self.quest_notifications.append({"message": f"Quest Complete: {quest.description}!", "timer": 180})
-    
-    def gain_experience(self, amount):
-        """Add experience and check for level up"""
-        self.experience += amount
-        
-        # Check for level up
-        while self.experience >= self.exp_to_next_level:
-            self.experience -= self.exp_to_next_level
-            self.level += 1
-            self.exp_to_next_level = int(self.exp_to_next_level * 1.5)  # Exponential growth
-            
-            # Level up bonus
-            bonus_wealth = self.level * 100
-            self.wealth += bonus_wealth
-            self.total_earned += bonus_wealth
-    
-    def draw_all_systems(self, screen):
-        """Draw all game systems"""
-        # Draw sky with day/night
-        sky_color = self.get_sky_color()
-        screen.fill(sky_color)
-        
-        # Draw weather
-        self.weather_system.draw(screen)
-        
-        # Draw structures
-        for structure in self.structures:
-            structure.draw(screen, self.camera_x, self.camera_y)
-            
-        # Draw NPCs
-        for npc in self.npcs:
-            npc.draw(screen, self.camera_x, self.camera_y)
-            
-        # Draw enemies
-        for enemy in self.enemies:
-            enemy.draw(screen, self.camera_x, self.camera_y)
-            
-        # Draw power-ups
-        for powerup in self.powerups:
-            powerup.draw(screen, self.camera_x, self.camera_y)
-            
-        # Draw pets
-        for pet in self.pets:
-            pet.draw(screen, self.camera_x, self.camera_y)
-            
-        # Draw achievements
-        self.achievement_system.draw(screen)
-        
-        # Draw quest notifications
-        for i, notification in enumerate(self.quest_notifications[:]):
-            y_pos = 200 + i * 30
-            font = pygame.font.Font(None, 24)
-            text = font.render("✅ " + notification["message"], True, GREEN)
-            screen.blit(text, (50, y_pos))
-            
-            notification["timer"] -= 1
-            if notification["timer"] <= 0:
-                self.quest_notifications.remove(notification)
-        
-        # Initialize enhancement systems
+        # Upgrades
         self.owned_upgrades = {
             UpgradeType.PICKAXE: True,
             UpgradeType.STEEL_PICKAXE: False,
@@ -921,17 +493,6 @@ class WealthCraftGame:
         self.current_tool = ToolType.BASIC_PICKAXE
         self.current_weapon = WeaponType.BASIC_SWORD
         
-        # Save system (now after owned_tools is defined)
-        self.save_data = {
-            "level": self.level,
-            "wealth": self.wealth,
-            "achievements": self.achievements,
-            "owned_tools": self.owned_tools,
-            "owned_weapons": self.owned_weapons,
-            "owned_upgrades": self.owned_upgrades,
-            "owned_items": self.owned_items
-        }
-        
         # Tool and weapon costs
         self.tool_costs = {
             ToolType.BASIC_PICKAXE: {"cost": 0, "level": 1, "name": "⛏️ Basic Pickaxe - Free"},
@@ -982,22 +543,88 @@ class WealthCraftGame:
             y = random.randint(5, self.world_height - 10)
             self.blocks[x][y] = 4  # Gem deposit
             
+    def generate_fun_locations(self):
+        """Generate fun villages, ruby hills, and bitcoin mines"""
+        # Generate FUN VILLAGES!
+        num_villages = random.randint(4, 8)
+        village_types = [VillageType.FUN_VILLAGE, VillageType.RUBY_VILLAGE, 
+                        VillageType.BITCOIN_VILLAGE, VillageType.CRYSTAL_VILLAGE,
+                        VillageType.DRAGON_VILLAGE, VillageType.RAINBOW_VILLAGE]
+        
+        for i in range(num_villages):
+            x = random.randint(200, self.world_width * 40 - 200)
+            y = random.randint(100, self.world_height * 40 - 200)
+            village_type = random.choice(village_types)
+            
+            self.villages.append(Village(x, y, village_type))
+            
+        # Generate RUBY HILLS!
+        num_ruby_hills = random.randint(3, 6)
+        for i in range(num_ruby_hills):
+            x = random.randint(150, self.world_width * 40 - 150)
+            y = random.randint(150, self.world_height * 40 - 150)
+            
+            self.ruby_hills.append(RubyHill(x, y))
+            
+        # Generate BITCOIN MINES!
+        num_bitcoin_mines = random.randint(2, 4)
+        for i in range(num_bitcoin_mines):
+            x = random.randint(200, self.world_width * 40 - 200)
+            y = random.randint(200, self.world_height * 40 - 200)
+            
+            self.bitcoin_mines.append(BitcoinMine(x, y))
+            
+    def update_fun_locations(self):
+        """Update all fun locations"""
+        # Update villages
+        for village in self.villages:
+            village.update()
+            
+        # Update ruby hills
+        for ruby_hill in self.ruby_hills:
+            ruby_hill.update()
+            
+        # Update bitcoin mines
+        for bitcoin_mine in self.bitcoin_mines:
+            bitcoin_mine.update()
+            
     def spawn_gems(self):
-        # Spawn gems in the world
-        for _ in range(20):
+        # Spawn gems in the world with EPIC rarity system!
+        for _ in range(30):  # More gems now!
             x = random.randint(100, SCREEN_WIDTH - 100)
             y = random.randint(100, SCREEN_HEIGHT - 200)
             
-            # Random gem type with rarity
-            rand = random.random()
-            if rand < 0.5:
+            # EPIC gem rarity system
+            rand = random.random() * 100  # 0-100 scale
+            
+            if rand < 30:  # 30% - Ruby
                 gem_type = GemType.RUBY
-            elif rand < 0.8:
+            elif rand < 50:  # 20% - Emerald  
                 gem_type = GemType.EMERALD
-            elif rand < 0.95:
+            elif rand < 65:  # 15% - Diamond
                 gem_type = GemType.DIAMOND
-            else:
-                gem_type = GemType.GOLD
+            elif rand < 75:  # 10% - Sapphire
+                gem_type = GemType.SAPPHIRE
+            elif rand < 82:  # 7% - Amethyst
+                gem_type = GemType.AMETHYST
+            elif rand < 87:  # 5% - Crystal
+                gem_type = GemType.CRYSTAL
+            elif rand < 91:  # 4% - Rare Crystal
+                gem_type = GemType.RARE_CRYSTAL
+            elif rand < 94:  # 3% - Ancient Gem
+                gem_type = GemType.ANCIENT_GEM
+            elif rand < 96:  # 2% - Rainbow Gem
+                gem_type = GemType.RAINBOW_GEM
+            elif rand < 98:  # 2% - Dragon Gem
+                gem_type = GemType.DRAGON_GEM
+            elif rand < 99.5:  # 1.5% - Cosmic Gem
+                gem_type = GemType.COSMIC_GEM
+            elif rand < 99.9:  # 0.4% - Quantum Gem
+                gem_type = GemType.QUANTUM_GEM
+            elif rand < 99.98:  # 0.08% - BITCOIN! (SUPER RARE!)
+                gem_type = GemType.BITCOIN
+            else:  # 0.02% - Infinity Gem (EXTREMELY RARE!)
+                gem_type = GemType.INFINITY_GEM
                 
             self.gems.append(Gem(x, y, gem_type))
             
@@ -1183,72 +810,75 @@ class WealthCraftGame:
                     return {"type": "ruby", "value": 100}
                 else:
                     return {"type": "gold", "value": 50}
-                    
-        return None
-        
+    
     def update_player(self, keys):
-        # Movement
-        target_vel_x = 0
-        target_vel_y = 0
+        """Update player movement and underground mining"""
+        # Player movement
+        actual_speed = self.player_speed
         
-        if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            target_vel_x = -self.player_speed
-        elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            target_vel_x = self.player_speed
-            
-        if keys[pygame.K_w] or keys[pygame.K_UP]:
-            target_vel_y = -self.player_speed
-        elif keys[pygame.K_s] or keys[pygame.K_DOWN]:
-            target_vel_y = self.player_speed
-            
-        self.player_vel_x = target_vel_x
-        self.player_vel_y = target_vel_y
-        
-        # Apply gravity
-        if not self.player_on_ground:
-            self.player_vel_y += 0.8
-            if self.player_vel_y > 15:
-                self.player_vel_y = 15
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            self.player_x -= actual_speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.player_x += actual_speed
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            # Allow jumping/moving up only if not blocked
+            new_y = self.player_y - self.player_speed
+            if not self.check_block_collision(self.player_x, new_y):
+                self.player_y = new_y
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            # Allow moving down/mining down - UNDERGROUND MINING!
+            new_y = self.player_y + self.player_speed
+            if not self.check_block_collision(self.player_x, new_y):
+                self.player_y = new_y
+            else:
+                # If blocked, mine the block below!
+                world_x = int(self.player_x // 40)
+                world_y = int((self.player_y + self.player_height + 5) // 40)
+                self.mine_block(world_x, world_y)
                 
-        # Jump
-        if keys[pygame.K_SPACE] and self.player_on_ground:
-            self.player_vel_y = -self.player_jump_power
+        # Apply gravity when not moving down
+        if not (keys[pygame.K_DOWN] or keys[pygame.K_s]):
+            self.player_vel_y += 0.5
+            self.player_y += self.player_vel_y
+        else:
+            self.player_vel_y = 0  # Cancel gravity when actively mining down
+            
+        # Ground collision
+        if self.player_y >= SCREEN_HEIGHT - 100 - self.player_height:
+            self.player_y = SCREEN_HEIGHT - 100 - self.player_height
+            self.player_vel_y = 0
+            self.player_on_ground = True
+        else:
             self.player_on_ground = False
             
-        # Move player
-        self.player_x += self.player_vel_x
-        self.player_y += self.player_vel_y
+        # World boundaries
+        self.player_x = max(0, min(self.player_x, self.world_width * 40 - self.player_width))
+        self.player_y = max(0, min(self.player_y, self.world_height * 40 - self.player_height))
         
-        # World collision
-        self.resolve_player_collisions()
+        # Update camera to follow player
+        self.camera_x = max(0, min(self.player_x - SCREEN_WIDTH // 2, self.world_width * 40 - SCREEN_WIDTH))
+        self.camera_y = max(0, min(self.player_y - SCREEN_HEIGHT // 2, self.world_height * 40 - SCREEN_HEIGHT))
         
-    def resolve_player_collisions(self):
-        self.player_on_ground = False
+    def check_block_collision(self, x, y):
+        """Check if player position would collide with blocks"""
+        # Check player rectangle against blocks
+        player_rect = pygame.Rect(x, y, self.player_width, self.player_height)
         
-        # Check ground collision
-        player_rect = pygame.Rect(self.player_x, self.player_y, self.player_width, self.player_height)
+        # Check surrounding blocks
+        start_x = max(0, int(x // 40) - 1)
+        end_x = min(self.world_width, int((x + self.player_width) // 40) + 2)
+        start_y = max(0, int(y // 40) - 1)
+        end_y = min(self.world_height, int((y + self.player_height) // 40) + 2)
         
-        for x in range(player_rect.left // 40, player_rect.right // 40 + 1):
-            for y in range(player_rect.top // 40, player_rect.bottom // 40 + 1):
-                if 0 <= x < self.world_width and 0 <= y < self.world_height:
-                    if self.blocks[x][y] != 0:
-                        block_rect = pygame.Rect(x * 40, y * 40, 40, 40)
-                        if player_rect.colliderect(block_rect):
-                            if self.player_vel_y > 0:  # Falling
-                                self.player_y = block_rect.top - self.player_height
-                                self.player_on_ground = True
-                                self.player_vel_y = 0
-                            elif self.player_vel_y < 0:  # Jumping
-                                self.player_y = block_rect.bottom
-                                self.player_vel_y = 0
-                            elif self.player_vel_x > 0:  # Moving right
-                                self.player_x = block_rect.left - self.player_width
-                                self.player_vel_x = 0
-                            elif self.player_vel_x < 0:  # Moving left
-                                self.player_x = block_rect.right
-                                self.player_vel_x = 0
-                            return
-                            
+        for block_x in range(start_x, end_x):
+            for block_y in range(start_y, end_y):
+                block_type = self.blocks[block_x][block_y]
+                if block_type != 0:  # Not air (0 is air, everything else is solid)
+                    block_rect = pygame.Rect(block_x * 40, block_y * 40, 40, 40)
+                    if player_rect.colliderect(block_rect):
+                        return True
+        return False
+    
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1399,6 +1029,190 @@ class WealthCraftGame:
                             self.mining_speed = 10
                         elif upgrade_type == UpgradeType.QUANTUM_MINER:
                             self.mining_speed = 25
+                            self.pickaxe_power = 10
+                        elif upgrade_type == UpgradeType.RUBY_MAGNET:
+                            self.mining_multiplier = 3.0
+                        elif upgrade_type == UpgradeType.LUCKY_CHARMS:
+                            # Increase gem spawn rates
+                            for _ in range(5):
+                                self.spawn_gems()
+                    return True
+        
+        # Check shop items
+        shop_y_offset = 400
+        
+        for i, (item_type, item_info) in enumerate(self.shop_costs.items()):
+            if not self.owned_items[item_type]:
+                button_rect = pygame.Rect(SCREEN_WIDTH // 2 - 200, shop_y_offset + i * 50, 400, 40)
+                if button_rect.collidepoint(pos):
+                    if self.wealth >= item_info["cost"] and self.level >= item_info["level"]:
+                        self.wealth -= item_info["cost"]
+                        self.owned_items[item_type] = True
+                    return True
+        return False
+        
+    def update(self):
+        if self.state == GameState.PLAYING:
+            keys = pygame.key.get_pressed()
+            self.update_player(keys)
+            
+            # Update boss battles
+            self.update_boss_battle()
+            
+            # Update special effects
+            self.update_special_effects()
+            
+            # Update ultimate mode
+            self.update_ultimate_mode()
+            
+            # Update world systems
+            self.update_world_systems()
+            
+            # Update mining depth
+            self.update_mining_depth()
+            
+            # Update fun locations!
+            self.update_fun_locations()
+            
+            # Auto-mining
+            if self.auto_mine:
+                base_speed = self.mining_speed * self.mining_multiplier
+                if self.mining_combo > 0:
+                    combo_bonus = 1 + (self.mining_combo * 0.2)
+                    base_speed *= combo_bonus
+                    
+                self.mine_progress += base_speed
+                
+                # Combo timing
+                current_time = pygame.time.get_ticks()
+                if current_time - self.last_mine_time < 1000:
+                    self.mining_combo += 1
+                else:
+                    self.mining_combo = 0
+                self.last_mine_time = current_time
+                
+                if self.mine_progress >= 100:
+                    self.mine_progress = 0
+                    # Earn wealth based on pickaxe power
+                    base_earned = self.pickaxe_power * 25
+                    total_earned = int(base_earned * self.mining_multiplier)
+                    if self.mining_combo > 5:
+                        total_earned *= 2
+                        
+                    self.wealth += total_earned
+                    self.total_earned += total_earned
+                    self.gain_experience(total_earned // 10)  # 1 exp per 10 wealth
+                    self.last_mine_time = pygame.time.get_ticks()
+                    
+                    # EPIC mining particles
+                    particle_count = self.pickaxe_power * 5
+                    if self.mining_combo > 5:
+                        particle_count *= 2
+                        
+                    for _ in range(particle_count):
+                        particle = Particle(
+                            self.player_x + self.player_width // 2 + random.randint(-30, 30),
+                            self.player_y + self.player_height // 2 + random.randint(-30, 30),
+                            random.uniform(-8, 8),
+                            random.uniform(-15, -5),
+                            GOLD,
+                            random.randint(5, 15),
+                            random.randint(30, 60)
+                        )
+                        self.particles.append(particle)
+                        
+            # Update gems (enhanced with new gem types)
+            for gem in self.gems[:]:
+                gem.update()
+                
+                # Check collection
+                gem_rect = pygame.Rect(gem.x - 10, gem.y - 10, 20, 20)
+                player_rect = pygame.Rect(self.player_x, self.player_y, self.player_width, self.player_height)
+                if gem_rect.colliderect(player_rect) and not gem.collected:
+                    gem.collected = True
+                    props = gem.properties[gem.type]
+                    
+                    # Enhanced gem collection
+                    if gem.type == GemType.RUBY:
+                        self.rubies += 1
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.EMERALD:
+                        self.emeralds += 1
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.DIAMOND:
+                        self.diamonds += 1
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.GOLD:
+                        self.gold += 1
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.SAPPHIRE:
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.AMETHYST:
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.CRYSTAL:
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.RARE_CRYSTAL:
+                        self.wealth += props["value"]
+                    elif gem.type == GemType.ANCIENT_GEM:
+                        self.wealth += props["value"]
+                        self.player_health = min(100, self.player_health + 20)  # Heal effect
+                    elif gem.type == GemType.RAINBOW_GEM:
+                        self.wealth += props["value"]
+                        # Rainbow effect - spawn more gems
+                        for _ in range(5):
+                            self.spawn_gems()
+                    elif gem.type == GemType.DRAGON_GEM:
+                        self.wealth += props["value"]
+                        # Fire effect - damage nearby enemies
+                        if self.current_boss:
+                            self.damage_boss(50)
+                    elif gem.type == GemType.COSMIC_GEM:
+                        self.wealth += props["value"]
+                        # Cosmic effect - temporary invincibility
+                        self.ultimate_mode = True
+                        self.ultimate_mode_timer = 300
+                    elif gem.type == GemType.QUANTUM_GEM:
+                        self.wealth += props["value"]
+                        # Quantum effect - instant mine boost
+                        self.mining_speed = 100
+                    elif gem.type == GemType.INFINITY_GEM:
+                        self.wealth += props["value"]
+                        # Infinity effect - massive wealth multiplier
+                        self.wealth *= 2
+                    elif gem.type == GemType.BITCOIN:
+                        self.wealth += props["value"]
+                        # BITCOIN effect - MASSIVE crypto wealth boost!
+                        self.wealth += int(self.wealth * 0.5)  # 50% bonus!
+                        self.boss_notification = "₿ BITCOIN MEGA BONUS! ₿"
+                        self.boss_notification_timer = 300
+                        
+                    # Gain experience from gems
+                    self.gain_experience(props["value"] // 5)
+                    
+                    # EPIC collection particles based on rarity
+                    particle_count = 15 + props["rarity"] * 5
+                    for _ in range(particle_count):
+                        particle = Particle(
+                            gem.x,
+                            gem.y,
+                            random.uniform(-6, 6),
+                            random.uniform(-8, -2),
+                            props["color"],
+                            random.randint(3, 10),
+                            random.randint(20, 40)
+                        )
+                        self.particles.append(particle)
+                        
+            # Update particles
+            for particle in self.particles[:]:
+                particle.update()
+                if particle.life <= 0:
+                    self.particles.remove(particle)
+                    
+    def gain_experience(self, amount):
+        self.experience += amount
+        
+        # Check for level up
         while self.experience >= self.exp_to_next_level:
             self.experience -= self.exp_to_next_level
             self.level += 1
@@ -1408,6 +1222,9 @@ class WealthCraftGame:
             bonus_wealth = self.level * 100
             self.wealth += bonus_wealth
             self.total_earned += bonus_wealth
+            
+            # Check for boss spawn
+            self.check_boss_spawn()
             
             # Create level up particles
             for _ in range(20):
@@ -1422,6 +1239,985 @@ class WealthCraftGame:
                 )
                 self.particles.append(particle)
                     
+    def check_boss_spawn(self):
+        """Check if conditions are met for boss spawn"""
+        if not self.boss_battle_active and self.wealth >= self.next_boss_spawn_wealth:
+            self.spawn_boss()
+            
+    def spawn_boss(self):
+        """Spawn an epic boss based on player progress"""
+        boss_types = ["crystal_golem", "shadow_dragon", "quantum_beast", "cosmic_titan", "infinity_warrior"]
+        
+        # Select boss based on wealth/progress
+        if self.wealth < 25000:
+            boss_type = "crystal_golem"
+        elif self.wealth < 75000:
+            boss_type = "shadow_dragon"
+        elif self.wealth < 200000:
+            boss_type = "quantum_beast"
+        elif self.wealth < 1000000:
+            boss_type = "cosmic_titan"
+        else:
+            boss_type = "infinity_warrior"
+            
+        # Spawn boss
+        x = SCREEN_WIDTH // 2
+        y = SCREEN_HEIGHT // 2
+        self.current_boss = Boss(x, y, boss_type)
+        self.boss_battle_active = True
+        
+        # Scale boss difficulty
+        self.current_boss.health = int(self.current_boss.health * self.boss_difficulty_multiplier)
+        self.current_boss.max_health = self.current_boss.health
+        self.current_boss.damage = int(self.current_boss.damage * self.boss_difficulty_multiplier)
+        
+        # Create spawn effect
+        self.special_effects.append(SpecialEffect(x, y, "explosion"))
+        
+        # Boss notification
+        self.boss_notification = f"⚠️ EPIC BOSS BATTLE: {boss_type.replace('_', ' ').title()}! ⚠️"
+        self.boss_notification_timer = 300
+        
+    def update_boss_battle(self):
+        """Update boss battle mechanics"""
+        if not self.boss_battle_active or not self.current_boss:
+            return
+            
+        # Update boss
+        self.current_boss.update(self.player_x, self.player_y)
+        
+        # Boss special attacks
+        if self.current_boss.special_attack_cooldown == 0:
+            self.execute_boss_special_attack()
+            self.current_boss.special_attack_cooldown = 180  # 3 seconds at 60 FPS
+            
+        # Check collision with player
+        boss_rect = pygame.Rect(self.current_boss.x - 40, self.current_boss.y - 40, 80, 80)
+        player_rect = pygame.Rect(self.player_x, self.player_y, self.player_width, self.player_height)
+        
+        if boss_rect.colliderect(player_rect):
+            if self.ultimate_mode:
+                # Ultimate mode - damage boss instead
+                self.damage_boss(100)
+            else:
+                # Take damage from boss
+                self.player_health -= self.current_boss.damage
+                if self.player_health <= 0:
+                    self.player_health = 0
+                    self.end_boss_battle(victory=False)
+                    
+        # Check if boss is defeated
+        if self.current_boss and self.current_boss.health <= 0:
+            self.end_boss_battle(victory=True)
+            
+    def execute_boss_special_attack(self):
+        """Execute boss special attacks"""
+        if not self.current_boss:
+            return
+            
+        boss_type = self.current_boss.type
+        
+        if boss_type == "crystal_golem":
+            # Crystal rain - falling crystals
+            for _ in range(10):
+                x = random.randint(100, SCREEN_WIDTH - 100)
+                y = random.randint(50, 200)
+                self.special_effects.append(SpecialEffect(x, y, "explosion"))
+                
+        elif boss_type == "shadow_dragon":
+            # Shadow breath - damaging area
+            self.special_effects.append(SpecialEffect(self.current_boss.x, self.current_boss.y, "fire"))
+            
+        elif boss_type == "quantum_beast":
+            # Quantum teleport - teleport around player
+            for _ in range(5):
+                x = self.player_x + random.randint(-200, 200)
+                y = self.player_y + random.randint(-200, 200)
+                self.special_effects.append(SpecialEffect(x, y, "teleport"))
+                
+        elif boss_type == "cosmic_titan":
+            # Cosmic storm - multiple effects
+            for _ in range(3):
+                x = random.randint(100, SCREEN_WIDTH - 100)
+                y = random.randint(100, SCREEN_HEIGHT - 100)
+                self.special_effects.append(SpecialEffect(x, y, "lightning"))
+                
+        elif boss_type == "infinity_warrior":
+            # Infinity blade - ultimate attack
+            self.special_effects.append(SpecialEffect(self.current_boss.x, self.current_boss.y, "black_hole"))
+            
+    def damage_boss(self, damage):
+        """Damage the current boss"""
+        if self.current_boss:
+            self.current_boss.health -= damage
+            # Create damage effect
+            self.special_effects.append(SpecialEffect(self.current_boss.x, self.current_boss.y, "explosion"))
+            
+    def end_boss_battle(self, victory):
+        """End the boss battle"""
+        if victory:
+            # Victory rewards
+            reward = self.current_boss.reward
+            self.wealth += reward
+            self.total_earned += reward
+            self.boss_defeated_count += 1
+            
+            # Victory effects
+            for _ in range(10):
+                x = self.current_boss.x + random.randint(-50, 50)
+                y = self.current_boss.y + random.randint(-50, 50)
+                self.special_effects.append(SpecialEffect(x, y, "explosion"))
+                
+            # Notification
+            self.boss_notification = f"🎉 VICTORY! Earned ${reward:,}! 🎉"
+            self.boss_notification_timer = 300
+            
+            # Increase difficulty
+            self.boss_difficulty_multiplier *= 1.2
+            self.next_boss_spawn_wealth = int(self.next_boss_spawn_wealth * 1.5)
+            
+            # Unlock ultimate mode after certain victories
+            if self.boss_defeated_count >= 3:
+                self.ultimate_mode = True
+                self.ultimate_mode_timer = 600  # 10 seconds
+                self.boss_notification = "⚡ ULTIMATE MODE ACTIVATED! ⚡"
+                self.boss_notification_timer = 300
+                
+        else:
+            # Defeat penalty
+            self.wealth = max(0, self.wealth // 2)  # Lose half wealth
+            self.boss_notification = "💀 DEFEATED! Lost half wealth! 💀"
+            self.boss_notification_timer = 300
+            
+        # Clean up
+        self.current_boss = None
+        self.boss_battle_active = False
+        
+    def update_special_effects(self):
+        """Update all special effects"""
+        for effect in self.special_effects[:]:
+            effect.update()
+            if effect.lifetime <= 0:
+                self.special_effects.remove(effect)
+                
+    def update_ultimate_mode(self):
+        """Update ultimate mode"""
+        if self.ultimate_mode:
+            self.ultimate_mode_timer -= 1
+            if self.ultimate_mode_timer <= 0:
+                self.ultimate_mode = False
+                self.boss_notification = "⚡ Ultimate Mode Ended ⚡"
+                self.boss_notification_timer = 180
+    
+    def update_world_systems(self):
+        """Update world systems like volcanoes"""
+        # Update volcanoes
+        self.world_generator.update_volcanoes()
+        
+        # Update current biome based on player position
+        player_grid_x = int(self.player_x // 40)
+        if 0 <= player_grid_x < self.world_width:
+            self.current_biome = self.biomes[player_grid_x][0]
+            
+        # Discover areas
+        area_key = (player_grid_x // 10, self.underground_level)
+        self.discovered_areas.add(area_key)
+        
+    def update_mining_depth(self):
+        """Update mining depth and underground levels"""
+        # Calculate current depth based on player Y position
+        player_grid_y = int(self.player_y // 40)
+        surface_level = self.get_surface_level(int(self.player_x // 40))
+        
+        if player_grid_y > surface_level:
+            self.mining_depth = player_grid_y - surface_level
+            
+            # Update underground level
+            self.underground_level = self.mining_depth // 20
+            
+            # Deeper levels = better rewards
+            if self.underground_level > 0:
+                depth_bonus = self.underground_level * 0.5
+                self.mining_multiplier = 1.0 + depth_bonus
+                
+    def get_surface_level(self, x):
+        """Get surface level at given X position"""
+        if 0 <= x < self.world_width:
+            for y in range(self.world_height):
+                if self.blocks[x][y] != 0:
+                    return y
+        return self.world_height // 2
+        
+    def mine_block(self, x, y):
+        """Mine a block with rewards based on type"""
+        if 0 <= x < self.world_width and 0 <= y < self.world_height:
+            block_type = self.blocks[x][y]
+            
+            if block_type > 0:  # Not air
+                # Base mining reward
+                base_reward = 10
+                gem_found = None
+                
+                # Special block rewards
+                if block_type == TerrainType.STONE:
+                    base_reward = 5
+                elif block_type == 14:  # Ruby ore
+                    gem_found = GemType.RUBY
+                    base_reward = 100
+                elif block_type == 15:  # Emerald ore
+                    gem_found = GemType.EMERALD
+                    base_reward = 200
+                elif block_type == 16:  # Diamond ore
+                    gem_found = GemType.DIAMOND
+                    base_reward = 500
+                elif block_type == 17:  # Crystal ore
+                    gem_found = GemType.CRYSTAL
+                    base_reward = 600
+                elif block_type == 18:  # Dragon ore
+                    gem_found = GemType.DRAGON_GEM
+                    base_reward = 10000
+                elif block_type == 19:  # Quantum ore
+                    gem_found = GemType.QUANTUM_GEM
+                    base_reward = 50000
+                elif block_type == TerrainType.LAVA:
+                    # Mining lava is dangerous!
+                    self.player_health -= 10
+                    base_reward = 50
+                elif block_type == TerrainType.MYSTICAL_ORE:
+                    # Random rare gem
+                    rare_gems = [GemType.ANCIENT_GEM, GemType.RAINBOW_GEM, GemType.COSMIC_GEM]
+                    gem_found = random.choice(rare_gems)
+                    base_reward = 5000
+                    
+                # Depth multiplier
+                depth_multiplier = 1.0 + (self.underground_level * 0.5)
+                total_reward = int(base_reward * depth_multiplier)
+                
+                self.wealth += total_reward
+                self.total_earned += total_reward
+                self.gain_experience(total_reward // 10)
+                
+                # Add gem if found
+                if gem_found:
+                    self.gems.append(Gem(x * 40, y * 40, gem_found))
+                
+                # Remove block
+                self.blocks[x][y] = 0
+                
+                # Mining particles
+                for _ in range(10):
+                    particle = Particle(
+                        x * 40 + 20,
+                        y * 40 + 20,
+                        random.uniform(-5, 5),
+                        random.uniform(-8, -2),
+                        (139, 69, 19),  # Brown
+                        random.randint(3, 8),
+                        random.randint(20, 40)
+                    )
+                    self.particles.append(particle)
+                    
+                # Return result for click handling
+                if gem_found:
+                    return {"type": gem_found.name.lower(), "value": total_reward}
+                else:
+                    return {"type": "stone", "value": total_reward}
+        return False
+        
+    def open_treasure_chest(self, x, y):
+        """Open a treasure chest"""
+        for chest in self.treasure_chests[:]:
+            if chest["x"] == x and chest["y"] == y and not chest["opened"]:
+                chest["opened"] = True
+                loot = chest["loot"]
+                
+                # Give rewards
+                self.wealth += loot["wealth"]
+                self.total_earned += loot["wealth"]
+                
+                # Add gems
+                for _ in range(loot["gems"]):
+                    gem_x = x * 40 + random.randint(-20, 20)
+                    gem_y = y * 40 + random.randint(-20, 20)
+                    
+                    # Random gem based on chest rarity
+                    if chest["rarity"] == "legendary":
+                        gem_types = [GemType.INFINITY_GEM, GemType.QUANTUM_GEM, GemType.COSMIC_GEM]
+                    elif chest["rarity"] == "epic":
+                        gem_types = [GemType.DRAGON_GEM, GemType.RAINBOW_GEM, GemType.ANCIENT_GEM]
+                    elif chest["rarity"] == "rare":
+                        gem_types = [GemType.RARE_CRYSTAL, GemType.CRYSTAL, GemType.DIAMOND]
+                    else:
+                        gem_types = [GemType.RUBY, GemType.EMERALD, GemType.SAPPHIRE]
+                        
+                    self.gems.append(Gem(gem_x, gem_y, random.choice(gem_types)))
+                    
+                # Special item
+                if loot["items"]:
+                    # Could give special equipment
+                    pass
+                    
+                # Create opening effect
+                self.special_effects.append(SpecialEffect(x * 40 + 20, y * 40 + 20, "explosion"))
+                
+                # Notification
+                self.boss_notification = f"💎 {chest['rarity'].title()} Chest Opened! +${loot['wealth']:,} 💎"
+                self.boss_notification_timer = 180
+                
+                return True
+        return False
+    
+    def draw_rainbow_bridge(self, screen, bridge):
+        """Draw INSANE rainbow bridge!"""
+        start_x = bridge["start_x"] * 40 - self.camera_x
+        end_x = bridge["end_x"] * 40 - self.camera_x
+        y = bridge["y"] * 40 - self.camera_y
+        
+        if -100 < start_x < SCREEN_WIDTH + 100 or -100 < end_x < SCREEN_WIDTH + 100:
+            # Draw rainbow bridge with multiple colors
+            bridge_width = 20
+            for i, color in enumerate(bridge["colors"]):
+                pygame.draw.line(screen, color, (start_x, y + i), (end_x, y + i), 3)
+                
+            # Sparkle effects
+            for _ in range(5):
+                sparkle_x = random.randint(int(start_x), int(end_x))
+                sparkle_y = y + random.randint(-5, 25)
+                pygame.draw.circle(screen, WHITE, (sparkle_x, sparkle_y), 2)
+                
+    def draw_quantum_portal(self, screen, portal):
+        """Draw INSANE quantum portal!"""
+        x = portal["x"] * 40 - self.camera_x
+        y = portal["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Animated quantum portal
+            time = pygame.time.get_ticks() // 100
+            
+            # Portal ring
+            for i in range(5):
+                radius = 20 + i * 5 + math.sin(time + i) * 3
+                color = (100 + i * 30, 0, 200 - i * 30)
+                pygame.draw.circle(screen, color, (int(x), int(y)), int(radius), 2)
+                
+            # Center glow
+            pygame.draw.circle(screen, (255, 255, 255), (int(x), int(y)), 10)
+            
+            # Quantum particles
+            for _ in range(8):
+                angle = (time * 0.1 + _) * math.pi * 2 / 8
+                particle_x = x + math.cos(angle) * 25
+                particle_y = y + math.sin(angle) * 25
+                pygame.draw.circle(screen, (0, 255, 255), (int(particle_x), int(particle_y)), 3)
+                
+    def draw_cosmic_observatory(self, screen, observatory):
+        """Draw INSANE cosmic observatory!"""
+        x = observatory["x"] * 40 - self.camera_x
+        y = observatory["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Observatory dome
+            pygame.draw.arc(screen, (100, 100, 200), (x - 30, y - 20, 60, 40), 0, math.pi, 3)
+            pygame.draw.arc(screen, (200, 200, 255), (x - 25, y - 15, 50, 30), 0, math.pi, 2)
+            
+            # Telescope
+            pygame.draw.rect(screen, (150, 150, 150), (x - 5, y - 10, 10, 20))
+            pygame.draw.circle(screen, (255, 255, 255), (int(x), int(y - 15)), 8)
+            
+            # Cosmic particles
+            if observatory["active"]:
+                for _ in range(5):
+                    star_x = x + random.randint(-40, 40)
+                    star_y = y + random.randint(-30, 10)
+                    pygame.draw.circle(screen, (255, 255, 200), (int(star_x), int(star_y)), 1)
+                    
+    def draw_time_temple(self, screen, temple):
+        """Draw INSANE time temple!"""
+        x = temple["x"] * 40 - self.camera_x
+        y = temple["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Temple building
+            pygame.draw.rect(screen, (200, 150, 100), (x - 20, y - 15, 40, 30))
+            pygame.draw.rect(screen, (255, 215, 0), (x - 20, y - 15, 40, 30), 3)
+            
+            # Time clock face
+            pygame.draw.circle(screen, (255, 255, 255), (int(x), int(y)), 15)
+            pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 15, 2)
+            
+            # Clock hands
+            time = pygame.time.get_ticks() // 1000
+            hour_angle = (time % 12) * math.pi / 6 - math.pi / 2
+            minute_angle = (time % 60) * math.pi / 30 - math.pi / 2
+            
+            hour_x = x + math.cos(hour_angle) * 8
+            hour_y = y + math.sin(hour_angle) * 8
+            minute_x = x + math.cos(minute_angle) * 10
+            minute_y = y + math.sin(minute_angle) * 10
+            
+            pygame.draw.line(screen, (0, 0, 0), (x, y), (int(hour_x), int(hour_y)), 3)
+            pygame.draw.line(screen, (255, 0, 0), (x, y), (int(minute_x), int(minute_y)), 2)
+            
+            # Time particles
+            if temple["active"]:
+                for _ in range(3):
+                    particle_x = x + random.randint(-25, 25)
+                    particle_y = y + random.randint(-20, 20)
+                    pygame.draw.circle(screen, (255, 215, 0), (int(particle_x), int(particle_y)), 2)
+                    
+    def draw_soul_altar(self, screen, altar):
+        """Draw INSANE soul altar!"""
+        x = altar["x"] * 40 - self.camera_x
+        y = altar["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Altar base
+            pygame.draw.rect(screen, (100, 0, 100), (x - 15, y - 10, 30, 20))
+            pygame.draw.rect(screen, (200, 100, 200), (x - 15, y - 10, 30, 20), 3)
+            
+            # Soul crystal
+            crystal_size = 10 + math.sin(pygame.time.get_ticks() * 0.001) * 3
+            pygame.draw.polygon(screen, (255, 255, 255), [
+                (x, y - crystal_size),
+                (x - crystal_size, y),
+                (x, y + crystal_size),
+                (x + crystal_size, y)
+            ])
+            
+            # Soul particles
+            if altar["active"]:
+                for _ in range(4):
+                    soul_x = x + random.randint(-20, 20)
+                    soul_y = y + random.randint(-15, 15)
+                    pygame.draw.circle(screen, (255, 200, 255), (int(soul_x), int(soul_y)), 3)
+                    
+    def draw_star_gate(self, screen, gate):
+        """Draw INSANE star gate!"""
+        x = gate["x"] * 40 - self.camera_x
+        y = gate["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Gate ring
+            time = pygame.time.get_ticks() * 0.001
+            for i in range(8):
+                angle = time + i * math.pi / 4
+                ring_x = x + math.cos(angle) * 25
+                ring_y = y + math.sin(angle) * 25
+                pygame.draw.circle(screen, (100, 200, 255), (int(ring_x), int(ring_y)), 8, 2)
+                
+            # Center portal
+            pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 15)
+            pygame.draw.circle(screen, (255, 255, 255), (int(x), int(y)), 15, 3)
+            
+            # Star particles
+            if gate["active"]:
+                for _ in range(6):
+                    star_x = x + random.randint(-30, 30)
+                    star_y = y + random.randint(-25, 25)
+                    # Draw star shape
+                    for i in range(5):
+                        angle = i * math.pi * 2 / 5 - math.pi / 2
+                        star_point_x = star_x + math.cos(angle) * 5
+                        star_point_y = star_y + math.sin(angle) * 5
+                        pygame.draw.circle(screen, (255, 255, 0), (int(star_point_x), int(star_point_y)), 2)
+                        
+    def draw_void_anchor(self, screen, anchor):
+        """Draw INSANE void anchor!"""
+        x = anchor["x"] * 40 - self.camera_x
+        y = anchor["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Void anchor base
+            pygame.draw.rect(screen, (50, 0, 50), (x - 20, y - 20, 40, 40))
+            pygame.draw.rect(screen, (150, 0, 150), (x - 20, y - 20, 40, 40), 3)
+            
+            # Void core
+            void_size = 15 + math.sin(pygame.time.get_ticks() * 0.002) * 5
+            pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), int(void_size))
+            pygame.draw.circle(screen, (200, 0, 200), (int(x), int(y)), int(void_size), 3)
+            
+            # Void particles
+            if anchor["active"]:
+                for _ in range(5):
+                    void_x = x + random.randint(-25, 25)
+                    void_y = y + random.randint(-20, 20)
+                    pygame.draw.circle(screen, (100, 0, 100), (int(void_x), int(void_y)), 4)
+                    
+    def draw_infinity_forge(self, screen, forge):
+        """Draw INSANE infinity forge!"""
+        x = forge["x"] * 40 - self.camera_x
+        y = forge["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Forge building
+            pygame.draw.rect(screen, (200, 100, 0), (x - 25, y - 20, 50, 40))
+            pygame.draw.rect(screen, (255, 165, 0), (x - 25, y - 20, 50, 40), 4)
+            
+            # Infinity symbol
+            infinity_size = 20
+            pygame.draw.ellipse(screen, (255, 255, 255), (x - infinity_size, y - 5, infinity_size * 2, 10), 3)
+            
+            # Forge particles
+            if forge["active"]:
+                for _ in range(8):
+                    forge_x = x + random.randint(-30, 30)
+                    forge_y = y + random.randint(-25, 25)
+                    pygame.draw.circle(screen, (255, 200, 0), (int(forge_x), int(forge_y)), 3)
+                    
+    def draw_blood_altar(self, screen, altar):
+        """Draw INSANE blood altar!"""
+        x = altar["x"] * 40 - self.camera_x
+        y = altar["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Altar base
+            pygame.draw.rect(screen, (100, 0, 0), (x - 20, y - 15, 40, 30))
+            pygame.draw.rect(screen, (200, 0, 0), (x - 20, y - 15, 40, 30), 3)
+            
+            # Blood pool
+            pygame.draw.ellipse(screen, (150, 0, 0), (x - 15, y - 5, 30, 15))
+            
+            # Blood particles
+            if altar["active"]:
+                for _ in range(6):
+                    blood_x = x + random.randint(-25, 25)
+                    blood_y = y + random.randint(-20, 20)
+                    pygame.draw.circle(screen, (200, 0, 0), (int(blood_x), int(blood_y)), 3)
+                    
+    def draw_elemental_shrine(self, screen, shrine):
+        """Draw INSANE elemental shrine!"""
+        x = shrine["x"] * 40 - self.camera_x
+        y = shrine["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Elemental colors
+            element_colors = {
+                "fire": (255, 0, 0),
+                "water": (0, 100, 255),
+                "earth": (139, 69, 19),
+                "air": (200, 200, 255),
+                "lightning": (255, 255, 0),
+                "ice": (200, 255, 255)
+            }
+            
+            color = element_colors.get(shrine["element"], (255, 255, 255))
+            
+            # Shrine base
+            pygame.draw.rect(screen, color, (x - 15, y - 15, 30, 30))
+            pygame.draw.rect(screen, WHITE, (x - 15, y - 15, 30, 30), 2)
+            
+            # Elemental symbol
+            pygame.draw.circle(screen, WHITE, (int(x), int(y)), 10)
+            pygame.draw.circle(screen, color, (int(x), int(y)), 8)
+            
+            # Elemental particles
+            if shrine["active"]:
+                for _ in range(4):
+                    element_x = x + random.randint(-20, 20)
+                    element_y = y + random.randint(-15, 15)
+                    pygame.draw.circle(screen, color, (int(element_x), int(element_y)), 2)
+                    
+    def draw_dimensional_rift(self, screen, rift):
+        """Draw INSANE dimensional rift!"""
+        x = rift["x"] * 40 - self.camera_x
+        y = rift["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Rift effect
+            time = pygame.time.get_ticks() * 0.001
+            for i in range(6):
+                offset = math.sin(time + i) * 10
+                pygame.draw.ellipse(screen, (200, 0, 255), 
+                                   (x - 25 + offset, y - 15 + offset, 50, 30), 2)
+                
+            # Portal center
+            pygame.draw.circle(screen, (0, 0, 0), (int(x), int(y)), 20)
+            pygame.draw.circle(screen, (255, 0, 255), (int(x), int(y)), 20, 3)
+            
+            # Dimensional particles
+            if rift["active"]:
+                for _ in range(8):
+                    rift_x = x + random.randint(-30, 30)
+                    rift_y = y + random.randint(-25, 25)
+                    pygame.draw.circle(screen, (255, 0, 255), (int(rift_x), int(rift_y)), 3)
+                    
+    def draw_dragon_lair(self, screen, lair):
+        """Draw INSANE dragon lair!"""
+        x = lair["x"] * 40 - self.camera_x
+        y = lair["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Dragon colors
+            dragon_colors = {
+                "fire": (255, 100, 0),
+                "ice": (200, 200, 255),
+                "lightning": (255, 255, 0),
+                "shadow": (50, 50, 50),
+                "cosmic": (200, 0, 200)
+            }
+            
+            color = dragon_colors.get(lair["dragon_type"], (255, 100, 0))
+            
+            # Lair entrance
+            pygame.draw.ellipse(screen, color, (x - 30, y - 20, 60, 40), 3)
+            pygame.draw.ellipse(screen, (0, 0, 0), (x - 25, y - 15, 50, 30))
+            
+            # Dragon particles
+            if lair["active"]:
+                for _ in range(6):
+                    dragon_x = x + random.randint(-35, 35)
+                    dragon_y = y + random.randint(-25, 25)
+                    pygame.draw.circle(screen, color, (int(dragon_x), int(dragon_y)), 4)
+                    
+    def draw_bitcoin_exchange(self, screen, exchange):
+        """Draw INSANE bitcoin exchange!"""
+        x = exchange["x"] * 40 - self.camera_x
+        y = exchange["y"] * 40 - self.camera_y
+        
+        if -100 < x < SCREEN_WIDTH + 100 and -100 < y < SCREEN_HEIGHT + 100:
+            # Exchange building
+            pygame.draw.rect(screen, BITCOIN_ORANGE, (x - 25, y - 20, 50, 40))
+            pygame.draw.rect(screen, BITCOIN_GOLD, (x - 25, y - 20, 50, 40), 4)
+            
+            # Bitcoin logo
+            font = pygame.font.Font(None, 24)
+            btc_text = font.render("₿", True, BLACK)
+            screen.blit(btc_text, (x - 10, y - 10))
+            
+            # Trading particles
+            if exchange["active"]:
+                for _ in range(8):
+                    btc_x = x + random.randint(-30, 30)
+                    btc_y = y + random.randint(-25, 25)
+                    pygame.draw.circle(screen, BITCOIN_GOLD, (int(btc_x), int(btc_y)), 3)
+                    
+    def draw_rainbow_valley(self, screen, valley):
+        """Draw INSANE rainbow valley!"""
+        start_x = valley["start_x"] * 40 - self.camera_x
+        end_x = valley["end_x"] * 40 - self.camera_x
+        y = valley["y"] * 40 - self.camera_y
+        
+        if -100 < start_x < SCREEN_WIDTH + 100 or -100 < end_x < SCREEN_WIDTH + 100:
+            # Rainbow valley effect
+            colors = [(255, 0, 0), (255, 127, 0), (255, 255, 0), (0, 255, 0), (0, 0, 255), (75, 0, 130)]
+            
+            for i, color in enumerate(colors):
+                valley_y = y + i * 5
+                pygame.draw.line(screen, color, (start_x, valley_y), (end_x, valley_y), 8)
+                
+            # Sparkle effects
+            for _ in range(10):
+                sparkle_x = random.randint(int(start_x), int(end_x))
+                sparkle_y = y + random.randint(-10, 40)
+                pygame.draw.circle(screen, WHITE, (sparkle_x, sparkle_y), 2)
+                
+    def draw_time_distorted_area(self, screen, area):
+        """Draw INSANE time distorted area!"""
+        x = area["x"] * 40 - self.camera_x
+        y = area["y"] * 40 - self.camera_y
+        radius = area["radius"] * 40
+        
+        if -radius < x < SCREEN_WIDTH + radius and -radius < y < SCREEN_HEIGHT + radius:
+            # Time distortion effect
+            time = pygame.time.get_ticks() * 0.001
+            for i in range(5):
+                distortion = math.sin(time + i) * 10
+                pygame.draw.circle(screen, (200, 200, 255), 
+                                 (int(x + distortion), int(y + distortion)), 
+                                 radius // 2, 2)
+                
+            # Time particles
+            if area["active"]:
+                for _ in range(6):
+                    time_x = x + random.randint(-radius, radius)
+                    time_y = y + random.randint(-radius, radius)
+                    pygame.draw.circle(screen, (255, 255, 255), (int(time_x), int(time_y)), 3)
+                    
+    def draw_quantum_field(self, screen, field):
+        """Draw INSANE quantum field!"""
+        x = field["x"] * 40 - self.camera_x
+        y = field["y"] * 40 - self.camera_y
+        radius = field["radius"] * 40
+        
+        if -radius < x < SCREEN_WIDTH + radius and -radius < y < SCREEN_HEIGHT + radius:
+            # Quantum field effect
+            time = pygame.time.get_ticks() * 0.002
+            for i in range(8):
+                angle = time + i * math.pi / 4
+                quantum_x = x + math.cos(angle) * radius
+                quantum_y = y + math.sin(angle) * radius
+                pygame.draw.circle(screen, (0, 255, 255), (int(quantum_x), int(quantum_y)), 10, 2)
+                
+            # Quantum particles
+            if field["active"]:
+                for _ in range(12):
+                    quantum_x = x + random.randint(-radius, radius)
+                    quantum_y = y + random.randint(-radius, radius)
+                    pygame.draw.circle(screen, (0, 255, 255), (int(quantum_x), int(quantum_y)), 4)
+                    
+    def draw_cosmic_realm(self, screen, realm):
+        """Draw INSANE cosmic realm!"""
+        x = realm["x"] * 40 - self.camera_x
+        y = realm["y"] * 40 - self.camera_y
+        radius = realm["radius"] * 40
+        
+        if -radius < x < SCREEN_WIDTH + radius and -radius < y < SCREEN_HEIGHT + radius:
+            # Cosmic realm effect
+            time = pygame.time.get_ticks() * 0.001
+            for i in range(12):
+                angle = time + i * math.pi / 6
+                cosmic_x = x + math.cos(angle) * radius
+                cosmic_y = y + math.sin(angle) * radius
+                pygame.draw.circle(screen, (200, 0, 200), (int(cosmic_x), int(cosmic_y)), 15, 3)
+                
+            # Center cosmic core
+            pygame.draw.circle(screen, (255, 255, 255), (int(x), int(y)), 20)
+            pygame.draw.circle(screen, (200, 0, 200), (int(x), int(y)), 20, 5)
+            
+            # Cosmic particles
+            if realm["active"]:
+                for _ in range(15):
+                    cosmic_x = x + random.randint(-radius, radius)
+                    cosmic_y = y + random.randint(-radius, radius)
+                    pygame.draw.circle(screen, (255, 255, 255), (int(cosmic_x), int(cosmic_y)), 3)
+                    
+    def draw_world(self, screen):
+        """Draw the ultimate world with all features"""
+        # Draw blocks with biome colors
+        for x in range(self.world_width):
+            for y in range(self.world_height):
+                if self.blocks[x][y] > 0:
+                    draw_x = x * 40 - self.camera_x
+                    draw_y = y * 40 - self.camera_y
+                    
+                    if -40 < draw_x < SCREEN_WIDTH + 40 and -40 < draw_y < SCREEN_HEIGHT + 40:
+                        block_type = self.blocks[x][y]
+                        biome = self.biomes[x][y]
+                        
+                        # Get block color based on type and biome
+                        color = self.get_block_color(block_type, biome)
+                        
+                        # Draw block
+                        pygame.draw.rect(screen, color, (draw_x, draw_y, 40, 40))
+                        pygame.draw.rect(screen, BLACK, (draw_x, draw_y, 40, 40), 1)
+                        
+                        # Draw special features
+                        if block_type == TerrainType.LAVA:
+                            # Animated lava
+                            lava_glow = abs(math.sin(pygame.time.get_ticks() * 0.005)) * 50
+                            pygame.draw.rect(screen, (255, int(100 + lava_glow), 0), (draw_x, draw_y, 40, 40))
+                        elif block_type >= 14:  # Ore blocks
+                            # Ore sparkles
+                            if random.randint(1, 30) == 1:
+                                pygame.draw.circle(screen, WHITE, (draw_x + 20, draw_y + 20), 2)
+                                
+        # Draw structures
+        for structure in self.structures:
+            self.draw_structure(screen, structure)
+            
+        # Draw FUN VILLAGES!
+        for village in self.villages:
+            village.draw(screen, self.camera_x, self.camera_y)
+            
+        # Draw RUBY HILLS!
+        for ruby_hill in self.ruby_hills:
+            ruby_hill.draw(screen, self.camera_x, self.camera_y)
+            
+        # Draw BITCOIN MINES!
+        for bitcoin_mine in self.bitcoin_mines:
+            bitcoin_mine.draw(screen, self.camera_x, self.camera_y)
+            
+        # 🌈 Draw INSANE RAINBOW BRIDGES!
+        for bridge in self.rainbow_bridges:
+            self.draw_rainbow_bridge(screen, bridge)
+            
+        # ⚛️ Draw INSANE QUANTUM PORTALS!
+        for portal in self.quantum_portals:
+            self.draw_quantum_portal(screen, portal)
+            
+        # 🔭 Draw INSANE COSMIC OBSERVATORIES!
+        for observatory in self.cosmic_observatories:
+            self.draw_cosmic_observatory(screen, observatory)
+            
+        # ⏰ Draw INSANE TIME TEMPLES!
+        for temple in self.time_temples:
+            self.draw_time_temple(screen, temple)
+            
+        # 👻 Draw INSANE SOUL ALTARS!
+        for altar in self.soul_altars:
+            self.draw_soul_altar(screen, altar)
+            
+        # 🌟 Draw INSANE STAR GATES!
+        for gate in self.star_gates:
+            self.draw_star_gate(screen, gate)
+            
+        # 🕳️ Draw INSANE VOID ANCHORS!
+        for anchor in self.void_anchors:
+            self.draw_void_anchor(screen, anchor)
+            
+        # ♾️ Draw INSANE INFINITY FORGES!
+        for forge in self.infinity_forges:
+            self.draw_infinity_forge(screen, forge)
+            
+        # 🩸 Draw INSANE BLOOD ALTARS!
+        for altar in self.blood_altars:
+            self.draw_blood_altar(screen, altar)
+            
+        # 🌪️ Draw INSANE ELEMENTAL SHRINES!
+        for shrine in self.elemental_shrines:
+            self.draw_elemental_shrine(screen, shrine)
+            
+        # 🌀 Draw INSANE DIMENSIONAL RIFTS!
+        for rift in self.dimensional_rifts:
+            self.draw_dimensional_rift(screen, rift)
+            
+        # 🐉 Draw INSANE DRAGON LAIRS!
+        for lair in self.dragon_lairs:
+            self.draw_dragon_lair(screen, lair)
+            
+        # ₿ Draw INSANE BITCOIN EXCHANGES!
+        for exchange in self.bitcoin_exchanges:
+            self.draw_bitcoin_exchange(screen, exchange)
+            
+        # 🌈 Draw INSANE RAINBOW VALLEYS!
+        for valley in self.rainbow_valleys:
+            self.draw_rainbow_valley(screen, valley)
+            
+        # ⏰ Draw INSANE TIME DISTORTED AREAS!
+        for area in self.time_distorted_areas:
+            self.draw_time_distorted_area(screen, area)
+            
+        # ⚛️ Draw INSANE QUANTUM FIELDS!
+        for field in self.quantum_fields:
+            self.draw_quantum_field(screen, field)
+            
+        # 🌌 Draw INSANE COSMIC REALMS!
+        for realm in self.cosmic_realms:
+            self.draw_cosmic_realm(screen, realm)
+            
+        # Draw treasure chests
+        for chest in self.treasure_chests:
+            if not chest["opened"]:
+                draw_x = chest["x"] * 40 - self.camera_x
+                draw_y = chest["y"] * 40 - self.camera_y
+                
+                if -40 < draw_x < SCREEN_WIDTH + 40 and -40 < draw_y < SCREEN_HEIGHT + 40:
+                    # Chest color based on rarity
+                    rarity_colors = {
+                        "common": (139, 69, 19),
+                        "uncommon": (0, 128, 0),
+                        "rare": (0, 0, 139),
+                        "epic": (128, 0, 128),
+                        "legendary": (255, 215, 0)
+                    }
+                    color = rarity_colors.get(chest["rarity"], (139, 69, 19))
+                    
+                    pygame.draw.rect(screen, color, (draw_x, draw_y, 40, 40))
+                    pygame.draw.rect(screen, BLACK, (draw_x, draw_y, 40, 40), 2)
+                    
+                    # Chest lock
+                    pygame.draw.circle(screen, YELLOW, (draw_x + 20, draw_y + 20), 5)
+                    
+    def get_block_color(self, block_type, biome):
+        """Get block color based on type and biome"""
+        # Base colors for terrain types
+        terrain_colors = {
+            TerrainType.GRASS: (34, 139, 34),
+            TerrainType.DIRT: (139, 69, 19),
+            TerrainType.STONE: (128, 128, 128),
+            TerrainType.SAND: (238, 203, 173),
+            TerrainType.SNOW: (255, 250, 250),
+            TerrainType.LAVA: (255, 69, 0),
+            TerrainType.ICE: (176, 224, 230),
+            TerrainType.CRYSTAL: (255, 255, 255),
+            TerrainType.OBSIDIAN: (47, 47, 47),
+            TerrainType.BEDROCK: (64, 64, 64),
+            TerrainType.MOUNTAIN_STONE: (105, 105, 105),
+            TerrainType.VOLCANIC_ROCK: (139, 90, 43),
+            TerrainType.MYSTICAL_ORE: (148, 0, 211)
+        }
+        
+        # Ore colors
+        ore_colors = {
+            14: (220, 20, 60),    # Ruby ore
+            15: (0, 100, 0),      # Emerald ore
+            16: (185, 242, 255),  # Diamond ore
+            17: (255, 255, 255),  # Crystal ore
+            18: (255, 140, 0),    # Dragon ore
+            19: (0, 255, 255)     # Quantum ore
+        }
+        
+        # Biome modifications
+        biome_modifiers = {
+            BiomeType.DESERT: lambda c: (min(255, c[0] + 30), max(0, c[1] - 20), max(0, c[2] - 30)),
+            BiomeType.SNOW: lambda c: (min(255, c[0] + 40), min(255, c[1] + 40), min(255, c[2] + 60)),
+            BiomeType.SWAMP: lambda c: (max(0, c[0] - 20), min(255, c[1] + 30), max(0, c[2] - 10)),
+            BiomeType.VOLCANIC: lambda c: (min(255, c[0] + 50), max(0, c[1] - 30), max(0, c[2] - 30))
+        }
+        
+        # Get base color
+        if block_type in ore_colors:
+            color = ore_colors[block_type]
+        else:
+            color = terrain_colors.get(block_type, (128, 128, 128))
+            
+        # Apply biome modification
+        if biome in biome_modifiers:
+            color = biome_modifiers[biome](color)
+            
+        return color
+        
+    def draw_structure(self, screen, structure):
+        """Draw world structures"""
+        draw_x = structure["x"] * 40 - self.camera_x
+        draw_y = structure["y"] * 40 - self.camera_y
+        
+        if -160 < draw_x < SCREEN_WIDTH + 160 and -160 < draw_y < SCREEN_HEIGHT + 160:
+            struct_type = structure["type"]
+            width = structure["width"] * 40
+            height = structure["height"] * 40
+            
+            if struct_type == StructureType.HOUSE:
+                # House walls
+                pygame.draw.rect(screen, (139, 90, 43), (draw_x, draw_y, width, height))
+                pygame.draw.rect(screen, BLACK, (draw_x, draw_y, width, height), 2)
+                
+                # Roof
+                pygame.draw.polygon(screen, (178, 34, 34), [
+                    (draw_x - 10, draw_y),
+                    (draw_x + width // 2, draw_y - 20),
+                    (draw_x + width + 10, draw_y)
+                ])
+                
+                # Door
+                pygame.draw.rect(screen, (101, 67, 33), (draw_x + width // 2 - 10, draw_y + height - 30, 20, 30))
+                
+            elif struct_type == StructureType.SHOP:
+                # Shop walls
+                pygame.draw.rect(screen, (255, 215, 0), (draw_x, draw_y, width, height))
+                pygame.draw.rect(screen, BLACK, (draw_x, draw_y, width, height), 2)
+                
+                # Shop sign
+                pygame.draw.rect(screen, WHITE, (draw_x + width // 2 - 20, draw_y - 10, 40, 15))
+                font = pygame.font.Font(None, 12)
+                text = font.render("SHOP", True, BLACK)
+                screen.blit(text, (draw_x + width // 2 - 15, draw_y - 8))
+                
+            elif struct_type == StructureType.TEMPLE:
+                # Temple walls
+                pygame.draw.rect(screen, (218, 165, 32), (draw_x, draw_y, width, height))
+                pygame.draw.rect(screen, BLACK, (draw_x, draw_y, width, height), 3)
+                
+                # Pillars
+                for i in range(2):
+                    pillar_x = draw_x + 10 + i * (width - 20)
+                    pygame.draw.rect(screen, (184, 134, 11), (pillar_x, draw_y, 8, height))
+                    
+            elif struct_type == StructureType.MOUNTAIN_PEAK:
+                # Mountain peak flag
+                pygame.draw.line(screen, BLACK, (draw_x + 20, draw_y), (draw_x + 20, draw_y - 30), 2)
+                pygame.draw.rect(screen, RED, (draw_x + 20, draw_y - 30, 15, 10))
+                
     def draw_menu(self):
         self.screen.fill(SKY_BLUE)
         
@@ -1780,34 +2576,67 @@ class WealthCraftGame:
             self.screen.blit(control_text, (SCREEN_WIDTH - 200, 120 + i * 25))
             
     def draw_shop(self):
-        self.screen.fill(BLACK)
+        # VIBRANT SHOP BACKGROUND!
+        self.screen.fill((20, 20, 40))  # Dark blue background
         
-        # Title
-        title_text = self.font_large.render("🛒 UPGRADE SHOP 🛒", True, GOLD)
+        # Animated rainbow border
+        border_time = pygame.time.get_ticks() // 100
+        border_colors = RAINBOW_COLORS[border_time % len(RAINBOW_COLORS)]
+        pygame.draw.rect(self.screen, border_colors, (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), 10)
+        
+        # Sparkle effects
+        for _ in range(20):
+            sparkle_x = random.randint(0, SCREEN_WIDTH)
+            sparkle_y = random.randint(0, SCREEN_HEIGHT)
+            pygame.draw.circle(self.screen, WHITE, (sparkle_x, sparkle_y), 1)
+        
+        # EPIC TITLE with rainbow effect!
+        title_text = self.font_large.render("🌟 MEGA FUN SHOP 🌟", True, GOLD)
         title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, 30))
+        
+        # Rainbow glow behind title
+        for i in range(5):
+            glow_color = RAINBOW_COLORS[(border_time + i) % len(RAINBOW_COLORS)]
+            glow_rect = title_rect.inflate(i * 10, i * 5)
+            pygame.draw.rect(self.screen, glow_color, glow_rect, 2)
+        
         self.screen.blit(title_text, title_rect)
         
-        # Level and wealth display
-        level_text = self.font_medium.render(f"⭐ Level {self.level}", True, YELLOW)
+        # FUN stats display with colors!
+        stats_bg = pygame.Rect(40, 70, 300, 90)
+        pygame.draw.rect(self.screen, (50, 50, 100), stats_bg)
+        pygame.draw.rect(self.screen, GOLD, stats_bg, 3)
+        
+        level_text = self.font_medium.render(f"⭐ LEVEL {self.level} ⭐", True, YELLOW)
         self.screen.blit(level_text, (50, 80))
         
-        wealth_text = self.font_medium.render(f"💰 Wealth: ${self.wealth}", True, GOLD)
-        self.screen.blit(wealth_text, (50, 110))
+        wealth_text = self.font_medium.render(f"💰 WEALTH: ${self.wealth:,} 💰", True, GOLD)
+        self.screen.blit(wealth_text, (50, 105))
         
-        exp_text = self.font_small.render(f"📈 EXP: {self.experience}/{self.exp_to_next_level}", True, WHITE)
-        self.screen.blit(exp_text, (50, 140))
+        exp_text = self.font_small.render(f"📈 EXP: {self.experience}/{self.exp_to_next_level}", True, LIME)
+        self.screen.blit(exp_text, (50, 130))
         
-        # Tab buttons
-        tools_tab = pygame.Rect(50, 180, 150, 40)
-        weapons_tab = pygame.Rect(210, 180, 150, 40)
-        items_tab = pygame.Rect(370, 180, 150, 40)
+        # FUN TAB BUTTONS!
+        tools_tab = pygame.Rect(50, 180, 150, 50)
+        weapons_tab = pygame.Rect(210, 180, 150, 50)
+        items_tab = pygame.Rect(370, 180, 150, 50)
+        bitcoin_tab = pygame.Rect(530, 180, 150, 50)  # NEW BITCOIN TAB!
         
-        # Draw tabs
-        pygame.draw.rect(self.screen, GREEN, tools_tab)
-        pygame.draw.rect(self.screen, WHITE, tools_tab, 2)
-        tools_text = self.font_medium.render("TOOLS", True, WHITE)
-        tools_text_rect = tools_text.get_rect(center=tools_tab.center)
-        self.screen.blit(tools_text, tools_text_rect)
+        # Rainbow tab colors
+        tab_colors = [RAINBOW_COLORS[0], RAINBOW_COLORS[3], RAINBOW_COLORS[6], BITCOIN_ORANGE]
+        tabs = [tools_tab, weapons_tab, items_tab, bitcoin_tab]
+        tab_names = ["TOOLS", "WEAPONS", "ITEMS", "₿ BITCOIN ₿"]
+        
+        for i, (tab, name, color) in enumerate(zip(tabs, tab_names, tab_colors)):
+            # Gradient effect
+            pygame.draw.rect(self.screen, color, tab)
+            pygame.draw.rect(self.screen, WHITE, tab, 3)
+            
+            # Tab text
+            text_color = WHITE if name != "₿ BITCOIN ₿" else BLACK
+            tab_text = self.font_medium.render(name, True, text_color)
+            text_rect = tab_text.get_rect(center=tab.center)
+            self.screen.blit(tab_text, text_rect)
         
         pygame.draw.rect(self.screen, PURPLE, weapons_tab)
         pygame.draw.rect(self.screen, WHITE, weapons_tab, 2)
