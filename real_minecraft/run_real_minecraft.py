@@ -13,8 +13,9 @@ def main():
     print("🎯 LAUNCHING REAL MINECRAFT! 🎯")
     
     try:
-        from real_minecraft import main as game_main
-        game_main()
+        from real_minecraft import Game
+        game = Game()
+        game.run()
     except ImportError as e:
         print(f"❌ Error: {e}")
         sys.exit(1)

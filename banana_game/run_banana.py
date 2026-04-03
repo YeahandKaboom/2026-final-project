@@ -13,7 +13,7 @@ def main():
     print("🍌 LAUNCHING BANANA GAME! 🍌")
     
     try:
-        from banana import main as game_main
+        from main_game import main as game_main
         game_main()
     except ImportError as e:
         print(f"❌ Error: {e}")

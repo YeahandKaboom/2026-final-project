@@ -13,8 +13,9 @@ def main():
     print("☕ LAUNCHING MINECRAFT JAVA EDITION! ☕")
     
     try:
-        from minecraft_java_edition import main as game_main
-        game_main()
+        from minecraft_java_edition import Game
+        game = Game()
+        game.run()
     except ImportError as e:
         print(f"❌ Error: {e}")
         sys.exit(1)

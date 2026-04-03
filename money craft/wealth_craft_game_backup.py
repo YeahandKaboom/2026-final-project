@@ -1197,21 +1197,17 @@ class WealthCraftGame:
             self.player_x += self.player_speed
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.player_y -= self.player_speed
-        # Jumping (only when on ground)
-        if (keys[pygame.K_UP] or keys[pygame.K_w]) and self.on_ground:
-            self.player_vel_y = -15
-            self.on_ground = False
-        
-        # Apply gravity
-        self.player_vel_y += 0.8  # Gravity
-        self.player_y += self.player_vel_y
-        
-        # Check ground collision
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.player_y += self.player_speed
+            
+        # Check if player is on ground level
         ground_y = self.get_ground_level(self.player_x)
-        if self.player_y >= ground_y - 20:
-            self.player_y = ground_y - 20
-            self.player_vel_y = 0
-            self.on_ground = True            
+        if self.player_y >= ground_y - 20:  # Near or on ground
+            self.player_y = ground_y - 20  # Keep player on ground
+            self.on_ground = True
+        else:
+            self.on_ground = False
+            
         # Underground mining tunnel entry (press E when near tunnel)
         if keys[pygame.K_e]:
             self.check_tunnel_entry()

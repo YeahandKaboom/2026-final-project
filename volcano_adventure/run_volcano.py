@@ -13,8 +13,9 @@ def main():
     print("🌋 LAUNCHING VOLCANO ADVENTURE! 🌋")
     
     try:
-        from volcano_adventure_game import main as game_main
-        game_main()
+        from volcano_adventure_game import VolcanoAdventureGame
+        game = VolcanoAdventureGame()
+        game.run()
     except ImportError as e:
         print(f"❌ Error: {e}")
         sys.exit(1)
