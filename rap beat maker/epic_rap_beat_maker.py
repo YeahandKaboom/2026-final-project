@@ -36,250 +36,271 @@ BASS_COLOR = (138, 43, 226)
 SNARE_COLOR = (255, 215, 0)
 HIHAT_COLOR = (192, 192, 192)
 
-# Christian Hip-Hop Songs
-class ChristianSong(Enum):
-    LET_GO_LET_GOD = "let_go_let_god"
 
-class ChristianRapSong:
-    def __init__(self, song_name, tempo, lyrics, pattern):
-        self.song_name = song_name
-        self.tempo = tempo
-        self.lyrics = lyrics
-        self.pattern = pattern
-        self.current_lyric_line = 0
-        self.playing = False
-        
-class ChristianRapSongs:
-    """Christian rap songs with full lyrics and beats"""
-    
+# Beat Enhancement System
+class BeatEnhancer:
     def __init__(self):
-        self.songs = self.create_christian_songs()
+        self.pitch_shifts = {
+            SoundType.SNARE: 0.0,
+            SoundType.CLAP: 0.0,
+            SoundType.BASS: 0.0,
+            SoundType.FX: 0.0,
+            SoundType.EXPLOSION: 0.0,
+            SoundType.LASER: 0.0,
+            SoundType.ZAPPER: 0.0,
+            SoundType.BASS_808: 0.0,
+            SoundType.KICK_808: 0.0,
+            SoundType.HIHAT_OPEN: 0.0,
+            SoundType.HIHAT_CLOSED: 0.0,
+            SoundType.RIMSHOT: 0.0,
+            SoundType.COWBELL: 0.0,
+            SoundType.SYNTH_LEAD: 0.0,
+            SoundType.VOCAL_CHOP: 0.0,
+            SoundType.REVERSE_CYMBAL: 0.0
+        }
+        self.reverb_enabled = False
+        self.reverb_size = 0.5
+        self.reverb_decay = 0.5
+        self.swing_amount = 0.0
+        self.swing_enabled = False
         
-    def create_christian_songs(self):
-        """Create Christian rap songs with beats and lyrics"""
-        songs = {}
+    def set_pitch_shift(self, sound_type, semitones):
+        """Set pitch shift in semitones (-12 to +12)"""
+        self.pitch_shifts[sound_type] = max(-12, min(12, semitones))
         
-        # Let Go Let God - Full Christian Rap Song
-        let_go_song = ChristianRapSong(
-            "Let Go Let God",
-            120,
-            [
-                "🎤 VERSE 1:",
-                "I was walking in darkness, lost in my own way",
-                "Trying to fix my problems, but I couldn't see the day",
-                "Then I heard a voice saying 'Child, give it all to Me'",
-                "Let Go Let God, that's the only way to be free",
-                "",
-                "🎤 CHORUS:",
-                "Let Go Let God, He's got your back",
-                "Let Go Let God, no turning back",
-                "Let Go Let God, His love will guide you through",
-                "Let Go Let God, His promises are true",
-                "",
-                "🎤 VERSE 2:",
-                "Stop trying to control what you can't understand",
-                "Give your worries to Him, He's got it in His hand",
-                "His strength is made perfect when you're weak and feeling low",
-                "Let Go Let God, watch your faith start to grow",
-                "",
-                "🎤 BRIDGE:",
-                "Every burden, every care, every worry, every fear",
-                "Lay them down at His feet, He's always here",
-                "Trust in His timing, trust in His plan",
-                "Let Go Let God, He's the great I AM",
-                "",
-                "🎤 OUTRO:",
-                "Let Go Let God... yeah...",
-                "Let Go Let God... amen...",
-                "His grace is sufficient, His love never ends",
-                "Let Go Let God, where your new life begins"
-            ],
-            [[False for _ in range(16)] for _ in range(16)]
-        )
+    def get_pitch_multiplier(self, sound_type):
+        """Get pitch multiplier for sound synthesis"""
+        semitones = self.pitch_shifts[sound_type]
+        return 2 ** (semitones / 12)
         
-        # Create the beat pattern for Let Go Let God
-        # Uplifting Christian hip-hop beat
-        let_go_song.pattern[8][0] = True   # 808 Kick on 1
-        let_go_song.pattern[8][4] = True   # 808 Kick on 2  
-        let_go_song.pattern[8][8] = True   # 808 Kick on 3
-        let_go_song.pattern[8][12] = True  # 808 Kick on 4
-        let_go_song.pattern[0][4] = True   # Snare on 2
-        let_go_song.pattern[0][12] = True  # Snare on 4
-        let_go_song.pattern[1][4] = True   # Clap on 2
-        let_go_song.pattern[1][12] = True  # Clap on 4
-        let_go_song.pattern[2][0] = True   # Bass on 1
-        let_go_song.pattern[2][2] = True   # Bass on 1&
-        let_go_song.pattern[2][4] = True   # Bass on 2
-        let_go_song.pattern[2][6] = True   # Bass on 2&
-        let_go_song.pattern[2][8] = True   # Bass on 3
-        let_go_song.pattern[2][10] = True  # Bass on 3&
-        let_go_song.pattern[2][12] = True  # Bass on 4
-        let_go_song.pattern[2][14] = True  # Bass on 4&
-        let_go_song.pattern[14][2] = True  # Synth Lead
-        let_go_song.pattern[14][6] = True  # Synth Lead
-        let_go_song.pattern[14][10] = True # Synth Lead
-        let_go_song.pattern[14][14] = True # Synth Lead
-        let_go_song.pattern[15][8] = True  # Vocal Chop on 3
+    def toggle_reverb(self):
+        """Toggle reverb on/off"""
+        self.reverb_enabled = not self.reverb_enabled
         
-        songs["Let Go Let God"] = let_go_song
-        return songs
+    def set_reverb_size(self, size):
+        """Set reverb room size (0.0 to 1.0)"""
+        self.reverb_size = max(0.0, min(1.0, size))
+        
+    def set_reverb_decay(self, decay):
+        """Set reverb decay time (0.0 to 1.0)"""
+        self.reverb_decay = max(0.0, min(1.0, decay))
+        
+    def set_swing(self, amount):
+        """Set swing amount (0.0 to 1.0)"""
+        self.swing_amount = max(0.0, min(1.0, amount))
+        
+    def toggle_swing(self):
+        """Toggle swing on/off"""
+        self.swing_enabled = not self.swing_enabled
+        
+    def apply_swing_timing(self, step):
+        """Apply swing timing to step"""
+        if not self.swing_enabled or self.swing_amount == 0:
+            return step
+            
+        # Apply swing to 8th notes
+        if step % 2 == 1:  # Off-beat
+            swing_offset = self.swing_amount * 0.5
+            return step + swing_offset
+        return step
 
-# Christian Hip-Hop Artists and Their Styles
-class ChristianArtist(Enum):
-    HULVEY = "hulvey"
-    FORREST_FRANK = "forrest_frank"
-    KB = "kb"
-    ONEK_PHIEW = "onek_phiew"
-
-class ArtistBeatPattern:
-    def __init__(self, artist, song_name, tempo, description):
-        self.artist = artist
-        self.song_name = song_name
-        self.tempo = tempo
-        self.description = description
-        self.pattern = [[False for _ in range(16)] for _ in range(16)]
-        self.sound_tips = []
-        self.technique_notes = []
-        
-class ChristianHipHopBeats:
-    """Christian hip-hop beat patterns and learning system"""
-    
+# Beat Pattern Management System
+class BeatPatternManager:
     def __init__(self):
-        self.artist_beats = self.create_christian_beats()
+        self.clipboard = None
+        self.pattern_slots = {
+            'A': None,
+            'B': None, 
+            'C': None,
+            'D': None
+        }
+        self.current_slot = 'A'
         
-    def create_christian_beats(self):
-        """Create authentic Christian hip-hop beat patterns"""
-        beats = {}
+    def copy_pattern(self, pattern):
+        """Copy pattern to clipboard"""
+        self.clipboard = [row[:] for row in pattern]
+        return True
         
-        # Hulvey Style - Melodic trap with worship elements
-        hulvey_beat = ArtistBeatPattern(
-            ChristianArtist.HULVEY,
-            "ECHO",
-            140,
-            "Melodic trap with atmospheric pads and 808s"
-        )
-        # Hulvey's signature pattern
-        hulvey_beat.pattern[7][0] = True  # 808 Bass on beat 1
-        hulvey_beat.pattern[7][4] = True  # 808 Bass on beat 2
-        hulvey_beat.pattern[7][8] = True  # 808 Bass on beat 3
-        hulvey_beat.pattern[7][12] = True # 808 Bass on beat 4
-        hulvey_beat.pattern[8][0] = True  # 808 Kick on beat 1
-        hulvey_beat.pattern[0][8] = True  # Snare on beat 3
-        hulvey_beat.pattern[14][2] = True # Synth Lead
-        hulvey_beat.pattern[14][6] = True # Synth Lead
-        hulvey_beat.pattern[14][10] = True# Synth Lead
-        hulvey_beat.pattern[14][14] = True# Synth Lead
-        hulvey_beat.sound_tips = [
-            "Use deep 808 bass for worship atmosphere",
-            "Add melodic synth leads for memorable hooks",
-            "Keep tempo around 140 BPM for modern trap feel"
-        ]
-        hulvey_beat.technique_notes = [
-            "Hulvey blends trap with worship music",
-            "Focus on emotional, atmospheric sounds",
-            "Simple patterns that support vocals"
-        ]
-        beats["Hulvey - ECHO"] = hulvey_beat
+    def paste_pattern(self, pattern):
+        """Paste pattern from clipboard"""
+        if self.clipboard:
+            for i in range(len(pattern)):
+                pattern[i] = self.clipboard[i][:]
+            return True
+        return False
         
-        # Forrest Frank Style - High energy trap with gospel influences
-        forrest_beat = ArtistBeatPattern(
-            ChristianArtist.FORREST_FRANK,
-            "LIFESYTLE",
-            150,
-            "High energy trap with fast hi-hats and gospel chops"
-        )
-        # Forrest Frank's pattern
-        forrest_beat.pattern[8][0] = True  # 808 Kick
-        forrest_beat.pattern[8][8] = True  # 808 Kick
-        forrest_beat.pattern[0][4] = True  # Snare
-        forrest_beat.pattern[0][12] = True # Snare
-        forrest_beat.pattern[10][2] = True # Open Hi-Hat
-        forrest_beat.pattern[11][1] = True # Closed Hi-Hat
-        forrest_beat.pattern[11][3] = True # Closed Hi-Hat
-        forrest_beat.pattern[11][5] = True # Closed Hi-Hat
-        forrest_beat.pattern[11][7] = True # Closed Hi-Hat
-        forrest_beat.pattern[15][6] = True # Vocal Chops
-        forrest_beat.pattern[15][14] = True# Vocal Chops
-        forrest_beat.sound_tips = [
-            "Fast hi-hat rolls for energy",
-            "Vocal chops add gospel flavor",
-            "Strong 808 foundation"
-        ]
-        forrest_beat.technique_notes = [
-            "Forrest Frank uses gospel samples",
-            "High energy patterns for worship",
-            "Complex hi-hat patterns"
-        ]
-        beats["Forrest Frank - LIFESTYLE"] = forrest_beat
+    def duplicate_pattern(self, pattern):
+        """Duplicate current pattern"""
+        return [row[:] for row in pattern]
         
-        # KB Style - Lyrical hip-hop with boom bap elements
-        kb_beat = ArtistBeatPattern(
-            ChristianArtist.KB,
-            "MASTERPIECE",
-            120,
-            "Lyrical hip-hop with strong boom bap foundation"
-        )
-        # KB's pattern
-        kb_beat.pattern[2][0] = True  # Bass
-        kb_beat.pattern[2][2] = True  # Bass
-        kb_beat.pattern[2][4] = True  # Bass
-        kb_beat.pattern[2][6] = True  # Bass
-        kb_beat.pattern[2][8] = True  # Bass
-        kb_beat.pattern[2][10] = True # Bass
-        kb_beat.pattern[2][12] = True # Bass
-        kb_beat.pattern[2][14] = True # Bass
-        kb_beat.pattern[0][4] = True  # Snare
-        kb_beat.pattern[0][12] = True # Snare
-        kb_beat.pattern[12][1] = True # Rimshot
-        kb_beat.pattern[12][5] = True # Rimshot
-        kb_beat.pattern[12][9] = True # Rimshot
-        kb_beat.pattern[12][13] = True# Rimshot
-        kb_beat.sound_tips = [
-            "Boom bap bass lines for lyrical focus",
-            "Rimshots add hip-hop authenticity",
-            "Simple, strong patterns support lyrics"
-        ]
-        kb_beat.technique_notes = [
-            "KB focuses on lyrical content",
-            "Boom bap influences from classic hip-hop",
-            "Clean patterns that don't distract"
-        ]
-        beats["KB - MASTERPIECE"] = kb_beat
+    def mirror_pattern_horizontal(self, pattern):
+        """Mirror pattern horizontally (reverse steps)"""
+        mirrored = []
+        for row in pattern:
+            mirrored.append(row[::-1])
+        return mirrored
         
-        # 1K Phew Style - Trap with unique vocal delivery
-        onek_beat = ArtistBeatPattern(
-            ChristianArtist.ONEK_PHIEW,
-            "PRAYING",
-            135,
-            "Modern trap with unique vocal patterns and 808s"
-        )
-        # 1K Phew's pattern
-        onek_beat.pattern[7][0] = True  # 808 Bass
-        onek_beat.pattern[7][6] = True  # 808 Bass
-        onek_beat.pattern[7][12] = True # 808 Bass
-        onek_beat.pattern[8][2] = True  # 808 Kick
-        onek_beat.pattern[8][10] = True # 808 Kick
-        onek_beat.pattern[0][4] = True  # Snare
-        onek_beat.pattern[0][12] = True # Snare
-        onek_beat.pattern[1][4] = True  # Clap
-        onek_beat.pattern[1][12] = True # Clap
-        onek_beat.pattern[10][1] = True # Open Hi-Hat
-        onek_beat.pattern[10][5] = True # Open Hi-Hat
-        onek_beat.pattern[10][9] = True # Open Hi-Hat
-        onek_beat.pattern[10][13] = True# Open Hi-Hat
-        onek_beat.sound_tips = [
-            "Unique 808 patterns for signature sound",
-            "Combine snares and claps for impact",
-            "Open hi-hats create space"
-        ]
-        onek_beat.technique_notes = [
-            "1K Phew has unique vocal delivery",
-            "Trap beats with gospel messaging",
-            "Signature 808 patterns"
-        ]
-        beats["1K Phew - PRAYING"] = onek_beat
+    def mirror_pattern_vertical(self, pattern):
+        """Mirror pattern vertically (reverse sounds)"""
+        return pattern[::-1]
         
-        return beats
+    def rotate_pattern_left(self, pattern):
+        """Rotate pattern left by 1 step"""
+        rotated = []
+        for row in pattern:
+            rotated.append(row[1:] + [row[0]])
+        return rotated
+        
+    def rotate_pattern_right(self, pattern):
+        """Rotate pattern right by 1 step"""
+        rotated = []
+        for row in pattern:
+            rotated.append([row[-1]] + row[:-1])
+        return rotated
+        
+    def save_to_slot(self, slot, pattern):
+        """Save pattern to slot A/B/C/D"""
+        if slot in self.pattern_slots:
+            self.pattern_slots[slot] = [row[:] for row in pattern]
+            return True
+        return False
+        
+    def load_from_slot(self, slot, pattern):
+        """Load pattern from slot A/B/C/D"""
+        if slot in self.pattern_slots and self.pattern_slots[slot]:
+            for i in range(len(pattern)):
+                pattern[i] = self.pattern_slots[slot][i][:]
+            return True
+        return False
+        
+    def clear_slot(self, slot):
+        """Clear pattern slot"""
+        if slot in self.pattern_slots:
+            self.pattern_slots[slot] = None
+            return True
+        return False
+
+# Random Beat Generator
+class RandomBeatGenerator:
+    def __init__(self):
+        self.genre_patterns = {
+            'trap': {
+                'kick_density': 0.3,
+                'snare_density': 0.2,
+                'hihat_density': 0.6,
+                'bass_density': 0.4,
+                '808_density': 0.3,
+                'swing_chance': 0.7
+            },
+            'boom_bap': {
+                'kick_density': 0.4,
+                'snare_density': 0.3,
+                'hihat_density': 0.5,
+                'bass_density': 0.5,
+                '808_density': 0.1,
+                'swing_chance': 0.3
+            },
+            'lo_fi': {
+                'kick_density': 0.2,
+                'snare_density': 0.2,
+                'hihat_density': 0.4,
+                'bass_density': 0.3,
+                '808_density': 0.1,
+                'swing_chance': 0.5
+            },
+            'techno': {
+                'kick_density': 0.5,
+                'snare_density': 0.3,
+                'hihat_density': 0.7,
+                'bass_density': 0.4,
+                '808_density': 0.2,
+                'swing_chance': 0.1
+            }
+        }
+        
+    def generate_random_pattern(self, genre='random', complexity=0.5):
+        """Generate a random beat pattern"""
+        if genre == 'random':
+            genre = random.choice(list(self.genre_patterns.keys()))
+        
+        pattern = [[False for _ in range(16)] for _ in range(16)]
+        settings = self.genre_patterns[genre]
+        
+        # Adjust densities based on complexity
+        multiplier = 0.5 + (complexity * 1.0)  # 0.5 to 1.5 multiplier
+        
+        # Generate kick pattern (row 8 = KICK_808)
+        self._generate_drum_pattern(pattern, 8, settings['kick_density'] * multiplier)
+        
+        # Generate snare pattern (row 0 = SNARE)
+        self._generate_drum_pattern(pattern, 0, settings['snare_density'] * multiplier)
+        
+        # Generate hi-hat patterns (rows 10-11 = HIHAT_OPEN/CLOSED)
+        self._generate_drum_pattern(pattern, 10, settings['hihat_density'] * multiplier * 0.3)  # Open hats
+        self._generate_drum_pattern(pattern, 11, settings['hihat_density'] * multiplier)  # Closed hats
+        
+        # Generate bass pattern (row 2 = BASS)
+        self._generate_drum_pattern(pattern, 2, settings['bass_density'] * multiplier)
+        
+        # Generate 808 bass (row 7 = BASS_808)
+        self._generate_drum_pattern(pattern, 7, settings['808_density'] * multiplier)
+        
+        # Add some random percussion
+        if random.random() < 0.3:
+            self._generate_drum_pattern(pattern, 12, 0.2)  # RIMSHOT
+        if random.random() < 0.2:
+            self._generate_drum_pattern(pattern, 13, 0.1)  # COWBELL
+            
+        # Add occasional FX
+        if random.random() < 0.15:
+            self._generate_drum_pattern(pattern, 3, 0.1)  # FX
+        if random.random() < 0.1:
+            self._generate_drum_pattern(pattern, 4, 0.05)  # EXPLOSION
+            
+        return pattern, genre
+    
+    def _generate_drum_pattern(self, pattern, row, density):
+        """Generate a drum pattern for a specific row"""
+        for step in range(16):
+            if random.random() < density:
+                # Add some rhythmic intelligence
+                if row == 8:  # Kick - emphasize downbeats
+                    if step % 4 == 0:  # Strong downbeats
+                        pattern[row][step] = True if random.random() < 0.8 else False
+                    elif step % 4 == 2:  # Off-beats
+                        pattern[row][step] = True if random.random() < 0.3 else False
+                    else:  # Other beats
+                        pattern[row][step] = True if random.random() < 0.1 else False
+                elif row == 0:  # Snare - emphasize 2 and 4
+                    if step % 4 == 2:  # Beat 3
+                        pattern[row][step] = True if random.random() < 0.7 else False
+                    elif step % 4 == 0 and step > 0:  # Beat 2 and 4
+                        pattern[row][step] = True if random.random() < 0.6 else False
+                    else:  # Ghost notes
+                        pattern[row][step] = True if random.random() < 0.1 else False
+                elif row in [10, 11]:  # Hi-hats - more varied
+                    if step % 2 == 0:  # Even steps
+                        pattern[row][step] = True if random.random() < density * 1.5 else False
+                    else:  # Odd steps
+                        pattern[row][step] = True if random.random() < density * 0.7 else False
+                else:  # Other instruments
+                    pattern[row][step] = True
+    
+    def generate_evolution(self, base_pattern, mutation_rate=0.1):
+        """Evolve an existing pattern"""
+        new_pattern = [row[:] for row in base_pattern]
+        
+        for row in range(16):
+            for step in range(16):
+                if random.random() < mutation_rate:
+                    # Flip this beat
+                    new_pattern[row][step] = not new_pattern[row][step]
+                    
+        return new_pattern
+    
+    def get_genre_info(self):
+        """Get information about available genres"""
+        return list(self.genre_patterns.keys())
 
 # Sound types
 class SoundType(Enum):
@@ -872,22 +893,14 @@ class EpicRapBeatMaker:
         self.background_volume = 0.5
         self.background_tracks = self.create_background_tracks()
         
-        # Christian Hip-Hop Learning System
-        self.christian_beats = ChristianHipHopBeats()
-        self.current_artist_beat = None
-        self.learning_mode = False
-        self.show_tips = True
-        
-        # Christian Rap Songs
-        self.christian_songs = ChristianRapSongs()
-        self.current_song = None
-        self.song_playing = False
-        self.lyric_timer = 0
-        self.lyric_display_time = 3000  # Show each lyric for 3 seconds
-        self.last_lyric_change = 0
-        
         # Beat Enhancement System
         self.beat_enhancer = BeatEnhancer()
+        
+        # Beat Pattern Management System
+        self.pattern_manager = BeatPatternManager()
+        
+        # Random Beat Generator
+        self.beat_generator = RandomBeatGenerator()
         
         # Presets
         self.presets = {
@@ -1139,8 +1152,8 @@ class EpicRapBeatMaker:
             SoundType.ZAPPER: YELLOW,
             SoundType.BASS_808: (138, 43, 226),  # Deep purple
             SoundType.KICK_808: (255, 69, 0),    # Orange-red
-            SoundType.HIHAT_OPEN: (192, 192, 192),  # Light gray
-            SoundType.HIHAT_CLOSED: (128, 128, 128),  # Dark gray
+            SoundType.HIHAT_OPEN: (255, 255, 100),  # Bright yellow
+            SoundType.HIHAT_CLOSED: (100, 255, 255),  # Cyan
             SoundType.RIMSHOT: (255, 255, 255),  # White
             SoundType.COWBELL: (255, 215, 0),    # Gold
             SoundType.SYNTH_LEAD: (0, 255, 127),  # Spring green
@@ -1215,226 +1228,151 @@ class EpicRapBeatMaker:
         
     def draw_controls(self):
         """Draw control panel"""
-        control_x = 50
-        control_y = 450
+        control_x = 900  # Right side
+        control_y = 280  # Moved lower
         
         # Title
-        title = self.font_large.render("🎤 BEAT CONTROLS 🎤", True, WHITE)
+        title = self.font_large.render("BEAT CONTROLS", True, WHITE)
         self.screen.blit(title, (control_x, control_y))
         
-        # Controls
-        controls = [
+        # Controls - split into columns to prevent overlapping
+        left_controls = [
             "SPACE: Play/Pause",
-            "R: Easy Record (Press to start, press again to save)",
-            "E: Auto-Record Mode (Records while playing)",
+            "R: Easy Record",
+            "E: Auto-Record", 
             "C: Clear Pattern",
-            "T: Change Tempo / Toggle Tips",
+            "T: Change Tempo",
             "1-4: Load Presets",
-            "Click Grid: Toggle Beat",
+            "5-8: Random Beats",
+            "G: Random Beat"
+        ]
+        
+        right_controls = [
+            "Shift+G: Cycle Genre",
+            "Alt+E: Evolve Pattern",
+            "Click: Toggle Beat",
             "Type: Add Lyrics",
             "S: Save Song",
             "",
-            "🎵 CHRISTIAN HIP-HOP LEARNING:",
-            "H: Load Hulvey Beat",
-            "F: Load Forrest Frank Beat", 
-            "K: Load KB Beat",
-            "Shift+1: Load 1K Phew Beat",
-            "L: Toggle Learning Mode",
-            "",
-            "🎤 PLAY SONG:",
-            "G: Play 'Let Go Let God' (Full Song!)"
+            "PATTERN MGMT:",
+            "Ctrl+C: Copy",
+            "Ctrl+V: Paste",
+            "Ctrl+X: Cut",
+            "Ctrl+D: Duplicate",
+            "Ctrl+M: Mirror",
+            "Ctrl+R/L: Rotate"
         ]
         
-        for i, control in enumerate(controls):
+        # Draw left column
+        for i, control in enumerate(left_controls):
             color = YELLOW if "Play" in control and self.playing else WHITE
             text = self.font_small.render(control, True, color)
-            self.screen.blit(text, (control_x, control_y + 40 + i * 25))
+            self.screen.blit(text, (control_x, control_y + 40 + i * 20))
+        
+        # Draw right column
+        right_x = control_x + 150  # Adjusted for new position
+        for i, control in enumerate(right_controls):
+            if control == "PATTERN MGMT:":
+                color = CYAN
+            elif control.startswith("Ctrl+"):
+                color = LIGHT_GRAY
+            else:
+                color = WHITE
+            text = self.font_small.render(control, True, color)
+            self.screen.blit(text, (right_x, control_y + 40 + i * 20))
             
         # Recording status
         if self.recording:
-            rec_text = self.font_large.render("🔴 RECORDING", True, RED)
+            rec_text = self.font_large.render("RECORDING", True, RED)
             self.screen.blit(rec_text, (SCREEN_WIDTH // 2 - 100, 50))
             
         if self.easy_record_mode:
-            easy_text = self.font_medium.render("🎵 AUTO-RECORD ON", True, GREEN)
+            easy_text = self.font_medium.render("AUTO-RECORD ON", True, GREEN)
             self.screen.blit(easy_text, (SCREEN_WIDTH // 2 - 80, 90))
+            
+        # Pattern slots display (moved to match controls)
+        slots_y = control_y + 320
+        slots_title = self.font_medium.render("PATTERN SLOTS", True, WHITE)
+        self.screen.blit(slots_title, (control_x, slots_y))
+        
+        for i, (slot_name, pattern) in enumerate(self.pattern_manager.pattern_slots.items()):
+            slot_x = control_x + i * 80
+            slot_y = slots_y + 40
+            
+            # Slot background
+            if pattern:
+                # Check if current pattern matches this slot
+                matches = (pattern == self.beat_pattern.pattern)
+                color = GREEN if matches else YELLOW
+                slot_text = f"{slot_name}"
+            else:
+                color = LIGHT_GRAY
+                slot_text = f"{slot_name}:"
+                
+            # Draw slot
+            slot_rect = pygame.Rect(slot_x, slot_y, 70, 25)
+            pygame.draw.rect(self.screen, color, slot_rect, 2)
+            
+            # Slot text
+            text = self.font_small.render(slot_text, True, color)
+            text_rect = text.get_rect(center=(slot_x + 35, slot_y + 12))
+            self.screen.blit(text, text_rect)
+        
+        # Instructions for slots
+        inst_text = self.font_small.render("F1-F4: Save | Shift+F1-F4: Load", True, LIGHT_GRAY)
+        self.screen.blit(inst_text, (control_x, slots_y + 75))
             
         # Tempo display
         tempo_text = self.font_medium.render(f"Tempo: {self.beat_pattern.tempo} BPM", True, WHITE)
         self.screen.blit(tempo_text, (control_x, control_y + 250))
             
-    def draw_song_lyrics(self):
-        """Draw Christian song lyrics"""
-        if not self.song_playing or not self.current_song:
-            return
-            
-        # Update lyrics
-        self.update_song_lyrics()
+    def get_sound_color(self, sound_type):
+        """Get color for sound type"""
+        colors = {
+            SoundType.SNARE: SNARE_COLOR,
+            SoundType.CLAP: ORANGE,
+            SoundType.BASS: BASS_COLOR,
+            SoundType.FX: GREEN,
+            SoundType.EXPLOSION: RED,
+            SoundType.LASER: CYAN,
+            SoundType.ZAPPER: PINK,
+            SoundType.BASS_808: PURPLE,
+            SoundType.KICK_808: ORANGE,
+            SoundType.HIHAT_OPEN: HIHAT_COLOR,
+            SoundType.HIHAT_CLOSED: LIGHT_GRAY,
+            SoundType.RIMSHOT: WHITE,
+            SoundType.COWBELL: YELLOW,
+            SoundType.SYNTH_LEAD: GREEN,
+            SoundType.VOCAL_CHOP: PINK,
+            SoundType.REVERSE_CYMBAL: CYAN
+        }
+        return colors.get(sound_type, WHITE)
         
-        # Lyrics display area
-        lyrics_x = 200
-        lyrics_y = 650
-        lyrics_width = 800
-        lyrics_height = 100
+    def draw_visualizer(self):
+        """Draw audio visualizer"""
+        viz_x = 700
+        viz_y = 150
+        viz_width = 300
+        viz_height = 100
         
-        # Background for lyrics
-        lyrics_rect = pygame.Rect(lyrics_x, lyrics_y, lyrics_width, lyrics_height)
-        pygame.draw.rect(self.screen, DARK_GRAY, lyrics_rect)
-        pygame.draw.rect(self.screen, WHITE, lyrics_rect, 2)
+        # Background
+        viz_rect = pygame.Rect(viz_x, viz_y, viz_width, viz_height)
+        pygame.draw.rect(self.screen, DARK_GRAY, viz_rect)
+        pygame.draw.rect(self.screen, WHITE, viz_rect, 2)
         
-        # Current lyric line
-        if self.current_song.current_lyric_line < len(self.current_song.lyrics):
-            current_lyric = self.current_song.lyrics[self.current_song.current_lyric_line]
-            
-            # Word wrap for long lyrics
-            words = current_lyric.split()
-            lines = []
-            current_line = ""
-            
-            for word in words:
-                test_line = current_line + word + " "
-                if self.font_medium.size(test_line)[0] < lyrics_width - 20:
-                    current_line = test_line
-                else:
-                    if current_line:
-                        lines.append(current_line.strip())
-                    current_line = word + " "
-            if current_line:
-                lines.append(current_line.strip())
-            
-            # Draw lyrics
-            y_offset = lyrics_y + 10
-            for line in lines[:3]:  # Max 3 lines
-                if line.strip():
-                    # Color code different parts
-                    if "VERSE" in line or "CHORUS" in line or "BRIDGE" in line or "OUTRO" in line:
-                        color = YELLOW
-                    elif "Let Go Let God" in line:
-                        color = CYAN
-                    else:
-                        color = WHITE
-                    
-                    lyric_text = self.font_medium.render(line, True, color)
-                    text_rect = lyric_text.get_rect(center=(lyrics_x + lyrics_width // 2, y_offset + 20))
-                    self.screen.blit(lyric_text, text_rect)
-                    y_offset += 30
-        
-        # Song info
-        song_info = self.font_small.render(f"🎵 {self.current_song.song_name} - {self.current_song.tempo} BPM", True, GREEN)
-        self.screen.blit(song_info, (lyrics_x, lyrics_y - 25))
-        
-        # Instructions
-        inst_text = self.font_small.render("Press G to stop song", True, LIGHT_GRAY)
-        self.screen.blit(inst_text, (lyrics_x + lyrics_width - 150, lyrics_y - 25))
-    
-    def draw_christian_learning(self):
-        """Draw Christian hip-hop learning interface"""
-        if not self.learning_mode or not self.current_artist_beat:
-            return
-            
-        # Learning panel
-        panel_x = 750
-        panel_y = 400
-        panel_width = 400
-        panel_height = 300
-        
-        # Panel background
-        panel_rect = pygame.Rect(panel_x, panel_y, panel_width, panel_height)
-        pygame.draw.rect(self.screen, DARK_GRAY, panel_rect)
-        pygame.draw.rect(self.screen, WHITE, panel_rect, 2)
-        
-        # Artist info
-        y_offset = panel_y + 10
-        
-        # Artist name and song
-        title = self.font_medium.render(f"🎵 {self.current_artist_beat.song_name}", True, WHITE)
-        self.screen.blit(title, (panel_x + 10, y_offset))
-        y_offset += 40
-        
-        # Artist name
-        artist = self.font_small.render(f"Artist: {self.current_artist_beat.artist.value.title()}", True, CYAN)
-        self.screen.blit(artist, (panel_x + 10, y_offset))
-        y_offset += 30
-        
-        # Description
-        desc = self.font_small.render(f"Style: {self.current_artist_beat.description}", True, YELLOW)
-        self.screen.blit(desc, (panel_x + 10, y_offset))
-        y_offset += 30
-        
-        # Tempo
-        tempo = self.font_small.render(f"Tempo: {self.current_artist_beat.tempo} BPM", True, GREEN)
-        self.screen.blit(tempo, (panel_x + 10, y_offset))
-        y_offset += 40
-        
-        # Sound tips
-        if self.show_tips:
-            tips_title = self.font_small.render("🎯 Sound Tips:", True, WHITE)
-            self.screen.blit(tips_title, (panel_x + 10, y_offset))
-            y_offset += 25
-            
-            for tip in self.current_artist_beat.sound_tips:
-                if y_offset < panel_y + panel_height - 60:
-                    # Wrap long tips
-                    words = tip.split()
-                    line = ""
-                    for word in words:
-                        test_line = line + word + " "
-                        if self.font_small.size(test_line)[0] < panel_width - 20:
-                            line = test_line
-                        else:
-                            if line:
-                                tip_text = self.font_small.render(line.strip(), True, LIGHT_GRAY)
-                                self.screen.blit(tip_text, (panel_x + 10, y_offset))
-                                y_offset += 20
-                            line = word + " "
-                    if line:
-                        tip_text = self.font_small.render(line.strip(), True, LIGHT_GRAY)
-                        self.screen.blit(tip_text, (panel_x + 10, y_offset))
-                        y_offset += 20
-            
-            y_offset += 10
-            
-            # Technique notes
-            tech_title = self.font_small.render("🎓 Techniques:", True, WHITE)
-            self.screen.blit(tech_title, (panel_x + 10, y_offset))
-            y_offset += 25
-            
-            for note in self.current_artist_beat.technique_notes:
-                if y_offset < panel_y + panel_height - 20:
-                    # Wrap long notes
-                    words = note.split()
-                    line = ""
-                    for word in words:
-                        test_line = line + word + " "
-                        if self.font_small.size(test_line)[0] < panel_width - 20:
-                            line = test_line
-                        else:
-                            if line:
-                                note_text = self.font_small.render(line.strip(), True, LIGHT_GRAY)
-                                self.screen.blit(note_text, (panel_x + 10, y_offset))
-                                y_offset += 20
-                            line = word + " "
-                    if line:
-                        note_text = self.font_small.render(line.strip(), True, LIGHT_GRAY)
-                        self.screen.blit(note_text, (panel_x + 10, y_offset))
-                        y_offset += 20
-        
-        # Instructions
-        inst_y = panel_y + panel_height - 60
-        instructions = [
-            "Press L: Toggle Learning Mode",
-            "Press T: Toggle Tips",
-            "Modify the beat to learn!"
-        ]
-        
-        for i, instruction in enumerate(instructions):
-            inst_text = self.font_small.render(instruction, True, GREEN)
-            self.screen.blit(inst_text, (panel_x + 10, inst_y + i * 20))
+        # Draw visualizer bars
+        if len(self.visualizer) > 0:
+            bar_width = viz_width // len(self.visualizer)
+            for i, value in enumerate(self.visualizer):
+                bar_height = int(value * viz_height)
+                bar_x = viz_x + i * bar_width
+                bar_y = viz_y + viz_height - bar_height
+                pygame.draw.rect(self.screen, GREEN, (bar_x, bar_y, bar_width - 2, bar_height))
     
     def draw_presets(self):
         """Draw preset buttons"""
         preset_x = 50
-        preset_y = 750
+        preset_y = 700  # Moved up from 750
         
         for i, (name, pattern) in enumerate(self.presets.items()):
             x = preset_x + i * 150
@@ -1463,12 +1401,12 @@ class EpicRapBeatMaker:
         
         # Check if click is within grid
         if (self.grid_x <= x <= self.grid_x + self.cell_width * 16 and
-            self.grid_y <= y <= self.grid_y + self.cell_height * 8):
+            self.grid_y <= y <= self.grid_y + self.cell_height * 16):  # Changed from 8 to 16
             
             col = (x - self.grid_x) // self.cell_width
             row = (y - self.grid_y) // self.cell_height
             
-            if 0 <= row < 8 and 0 <= col < 16:
+            if 0 <= row < 16 and 0 <= col < 16:  # Changed from 8 to 16
                 # Toggle beat
                 self.beat_pattern.pattern[row][col] = not self.beat_pattern.pattern[row][col]
                 self.selected_cell = (row, col)
@@ -1486,13 +1424,14 @@ class EpicRapBeatMaker:
     def handle_preset_click(self, pos):
         """Handle preset button clicks"""
         x, y = pos
-        preset_y = 750
+        preset_y = 700  # Updated to match new position
         
         if preset_y <= y <= preset_y + 30:
             for i, name in enumerate(self.presets.keys()):
-                button_x = 50 + i * 150
+                button_x = 50 + i * 150  # Match drawing coordinates
                 if button_x <= x <= button_x + 140:
                     self.beat_pattern.pattern = [row[:] for row in self.presets[name]]
+                    print(f"Loaded {name} preset")  # Add debug output
                     break
                     
     def play_step(self):
@@ -1583,50 +1522,153 @@ class EpicRapBeatMaker:
                 elif event.key == pygame.K_c:
                     self.beat_pattern.pattern = [[False for _ in range(16)] for _ in range(16)]
                     
-                # Christian Hip-Hop Learning Controls
-                elif event.key == pygame.K_h:
-                    # Hulvey beat
-                    self.load_christian_beat("Hulvey - ECHO")
-                    
-                elif event.key == pygame.K_f:
-                    # Forrest Frank beat
-                    self.load_christian_beat("Forrest Frank - LIFESTYLE")
-                    
-                elif event.key == pygame.K_k:
-                    # KB beat
-                    self.load_christian_beat("KB - MASTERPIECE")
-                    
-                elif event.key == pygame.K_1 and pygame.key.get_mods() & pygame.KMOD_SHIFT:
-                    # 1K Phew beat (Shift+1)
-                    self.load_christian_beat("1K Phew - PRAYING")
-                    
-                elif event.key == pygame.K_l:
-                    # Toggle learning mode
-                    self.learning_mode = not self.learning_mode
-                    if self.learning_mode:
-                        print("🎓 LEARNING MODE ON - Study Christian hip-hop beats!")
-                    else:
-                        print("📚 LEARNING MODE OFF")
-                        
-                elif event.key == pygame.K_t:
-                    # Toggle tips display
-                    self.show_tips = not self.show_tips
-                    
-                elif event.key == pygame.K_g:
-                    # Toggle "Let Go Let God" song
-                    if self.song_playing and self.current_song and self.current_song.song_name == "Let Go Let God":
-                        # Stop the song
-                        self.song_playing = False
-                        self.current_song = None
-                        self.playing = False
-                        print("🎵 Stopped 'Let Go Let God'")
-                    else:
-                        # Play the song
-                        self.play_christian_song("Let Go Let God")
-                    
                 elif event.key == pygame.K_t:
                     self.beat_pattern.tempo = (self.beat_pattern.tempo % 180) + 60
                     self.step_interval = 60000 // (self.beat_pattern.tempo * 4)
+                    
+                # Beat Pattern Management Controls
+                elif event.key == pygame.K_x and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+X: Cut pattern (copy and clear)
+                    self.pattern_manager.copy_pattern(self.beat_pattern.pattern)
+                    self.beat_pattern.pattern = [[False for _ in range(16)] for _ in range(16)]
+                    print("Pattern cut to clipboard")
+                    
+                elif event.key == pygame.K_c and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+C: Copy pattern
+                    self.pattern_manager.copy_pattern(self.beat_pattern.pattern)
+                    print("Pattern copied to clipboard")
+                    
+                elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+V: Paste pattern
+                    if self.pattern_manager.paste_pattern(self.beat_pattern.pattern):
+                        print("Pattern pasted from clipboard")
+                    else:
+                        print("No pattern in clipboard")
+                        
+                elif event.key == pygame.K_d and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+D: Duplicate pattern
+                    self.beat_pattern.pattern = self.pattern_manager.duplicate_pattern(self.beat_pattern.pattern)
+                    print("Pattern duplicated")
+                    
+                elif event.key == pygame.K_m and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+M: Mirror pattern horizontally
+                    self.beat_pattern.pattern = self.pattern_manager.mirror_pattern_horizontal(self.beat_pattern.pattern)
+                    print("Pattern mirrored horizontally")
+                    
+                elif event.key == pygame.K_r and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+R: Rotate pattern right
+                    self.beat_pattern.pattern = self.pattern_manager.rotate_pattern_right(self.beat_pattern.pattern)
+                    print("Pattern rotated right")
+                    
+                elif event.key == pygame.K_l and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                    # Ctrl+L: Rotate pattern left
+                    self.beat_pattern.pattern = self.pattern_manager.rotate_pattern_left(self.beat_pattern.pattern)
+                    print("Pattern rotated left")
+                    
+                # Pattern slot controls (F1-F4 for slots A-D)
+                elif event.key == pygame.K_F1:
+                    # Save to slot A
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        # Shift+F1: Load from slot A
+                        if self.pattern_manager.load_from_slot('A', self.beat_pattern.pattern):
+                            print("Loaded pattern from slot A")
+                        else:
+                            print("Slot A is empty")
+                    else:
+                        # F1: Save to slot A
+                        self.pattern_manager.save_to_slot('A', self.beat_pattern.pattern)
+                        print("Pattern saved to slot A")
+                        
+                elif event.key == pygame.K_F2:
+                    # Save to slot B
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        # Shift+F2: Load from slot B
+                        if self.pattern_manager.load_from_slot('B', self.beat_pattern.pattern):
+                            print("Loaded pattern from slot B")
+                        else:
+                            print("Slot B is empty")
+                    else:
+                        # F2: Save to slot B
+                        self.pattern_manager.save_to_slot('B', self.beat_pattern.pattern)
+                        print("Pattern saved to slot B")
+                        
+                elif event.key == pygame.K_F3:
+                    # Save to slot C
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        # Shift+F3: Load from slot C
+                        if self.pattern_manager.load_from_slot('C', self.beat_pattern.pattern):
+                            print("Loaded pattern from slot C")
+                        else:
+                            print("Slot C is empty")
+                    else:
+                        # F3: Save to slot C
+                        self.pattern_manager.save_to_slot('C', self.beat_pattern.pattern)
+                        print("Pattern saved to slot C")
+                        
+                elif event.key == pygame.K_F4:
+                    # Save to slot D
+                    if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                        # Shift+F4: Load from slot D
+                        if self.pattern_manager.load_from_slot('D', self.beat_pattern.pattern):
+                            print("Loaded pattern from slot D")
+                        else:
+                            print("Slot D is empty")
+                    else:
+                        # F4: Save to slot D
+                        self.pattern_manager.save_to_slot('D', self.beat_pattern.pattern)
+                        print("Pattern saved to slot D")
+                    
+                # Random Beat Generator Controls
+                elif event.key == pygame.K_g:
+                    # Generate random beat
+                    pattern, genre = self.beat_generator.generate_random_pattern()
+                    self.beat_pattern.pattern = pattern
+                    print(f"Generated {genre.title()} beat!")
+                    
+                elif event.key == pygame.K_g and pygame.key.get_mods() & pygame.KMOD_SHIFT:
+                    # Shift+G: Generate specific genre
+                    genres = self.beat_generator.get_genre_info()
+                    current_genre = getattr(self, '_current_genre', 0)
+                    current_genre = (current_genre + 1) % len(genres)
+                    self._current_genre = current_genre
+                    
+                    genre = genres[current_genre]
+                    pattern, _ = self.beat_generator.generate_random_pattern(genre)
+                    self.beat_pattern.pattern = pattern
+                    print(f"Generated {genre.title()} beat!")
+                    
+                elif event.key == pygame.K_e and pygame.key.get_mods() & pygame.KMOD_ALT:
+                    # Alt+E: Evolve current pattern
+                    if hasattr(self, '_last_pattern'):
+                        self.beat_pattern.pattern = self.beat_generator.generate_evolution(self.beat_pattern.pattern)
+                        print("Pattern evolved!")
+                    else:
+                        print("No pattern to evolve (create one first)")
+                    self._last_pattern = True
+                    
+                elif event.key == pygame.K_5:
+                    # Generate trap beat
+                    pattern, _ = self.beat_generator.generate_random_pattern('trap')
+                    self.beat_pattern.pattern = pattern
+                    print("Generated Trap beat!")
+                    
+                elif event.key == pygame.K_6:
+                    # Generate boom bap beat
+                    pattern, _ = self.beat_generator.generate_random_pattern('boom_bap')
+                    self.beat_pattern.pattern = pattern
+                    print("Generated Boom Bap beat!")
+                    
+                elif event.key == pygame.K_7:
+                    # Generate lo-fi beat
+                    pattern, _ = self.beat_generator.generate_random_pattern('lo_fi')
+                    self.beat_pattern.pattern = pattern
+                    print("Generated Lo-Fi beat!")
+                    
+                elif event.key == pygame.K_8:
+                    # Generate techno beat
+                    pattern, _ = self.beat_generator.generate_random_pattern('techno')
+                    self.beat_pattern.pattern = pattern
+                    print("Generated Techno beat!")
                     
                 elif event.key == pygame.K_1:
                     self.beat_pattern.pattern = [row[:] for row in self.presets["Trap"]]
@@ -1663,48 +1705,8 @@ class EpicRapBeatMaker:
                     
     def load_christian_beat(self, beat_name):
         """Load a Christian hip-hop beat for learning"""
-        if beat_name in self.christian_beats.artist_beats:
-            self.current_artist_beat = self.christian_beats.artist_beats[beat_name]
-            self.beat_pattern.pattern = [row[:] for row in self.current_artist_beat.pattern]
-            self.beat_pattern.tempo = self.current_artist_beat.tempo
-            self.step_interval = 60000 // (self.beat_pattern.tempo * 4)
-            self.learning_mode = True
-            print(f"🎵 Loaded {beat_name} - {self.current_artist_beat.description}")
-            print(f"🎓 Tempo: {self.current_artist_beat.tempo} BPM")
-            print("💡 Press L to toggle learning mode, T to toggle tips")
+        print("Artist beats not available")
             
-    def play_christian_song(self, song_name):
-        """Play a Christian rap song with lyrics"""
-        if song_name in self.christian_songs.songs:
-            self.current_song = self.christian_songs.songs[song_name]
-            self.beat_pattern.pattern = [row[:] for row in self.current_song.pattern]
-            self.beat_pattern.tempo = self.current_song.tempo
-            self.step_interval = 60000 // (self.beat_pattern.tempo * 4)
-            self.song_playing = True
-            self.current_song.current_lyric_line = 0
-            self.last_lyric_change = pygame.time.get_ticks()
-            
-            # Start playing the beat
-            self.playing = True
-            
-            print(f"🎵 Now playing: {song_name}")
-            print(f"🎤 Tempo: {self.current_song.tempo} BPM")
-            print("🎵 Press G again to stop, SPACE to pause/resume")
-            
-    def update_song_lyrics(self):
-        """Update which lyric line is currently being displayed"""
-        if self.song_playing and self.current_song:
-            current_time = pygame.time.get_ticks()
-            
-            # Move to next lyric line after display time
-            if current_time - self.last_lyric_change >= self.lyric_display_time:
-                self.current_song.current_lyric_line += 1
-                self.last_lyric_change = current_time
-                
-                # Loop back to beginning if reached end
-                if self.current_song.current_lyric_line >= len(self.current_song.lyrics):
-                    self.current_song.current_lyric_line = 0
-                    
     def save_recorded_beat(self):
         """Save recorded beat to file"""
         if self.recorded_pattern:
@@ -1741,44 +1743,47 @@ class EpicRapBeatMaker:
         """Draw everything"""
         self.screen.fill(BLACK)
         
-        # Apply screen shake
+        # Apply screen shake (fixed to prevent flashing)
+        shake_x = shake_y = 0
         if self.screen_shake > 0:
             shake_x = random.randint(-self.screen_shake, self.screen_shake)
             shake_y = random.randint(-self.screen_shake, self.screen_shake)
             self.screen_shake -= 1
-        else:
-            shake_x = shake_y = 0
             
-        # Create a temporary surface for screen shake
-        if shake_x != 0 or shake_y != 0:
-            temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-            temp_surface.fill(BLACK)
-            
-            # Draw everything to temp surface
-            self.draw_sequencer_grid()
-            self.draw_controls()
-            self.draw_presets()
-            self.draw_visualizer()
-            self.draw_christian_learning()
-            self.draw_song_lyrics()
-            
-            # Blit with shake
-            self.screen.blit(temp_surface, (shake_x, shake_y))
-        else:
-            # Draw directly to screen
-            self.draw_sequencer_grid()
-            self.draw_controls()
-            self.draw_presets()
-            self.draw_visualizer()
-            self.draw_christian_learning()
-            self.draw_song_lyrics()
+        # Draw all elements with shake offset
+        def draw_with_offset(element_func, *args, **kwargs):
+            if shake_x != 0 or shake_y != 0:
+                # Create temporary surface for this element
+                temp_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+                temp_surface.fill((0, 0, 0, 0))  # Transparent
+                
+                # Save original screen
+                original_screen = self.screen
+                
+                # Temporarily switch to temp surface
+                self.screen = temp_surface
+                element_func(*args, **kwargs)
+                
+                # Restore original screen
+                self.screen = original_screen
+                
+                # Blit with shake
+                self.screen.blit(temp_surface, (shake_x, shake_y))
+            else:
+                element_func(*args, **kwargs)
         
-        # Draw title
+        # Draw everything with shake effect
+        draw_with_offset(self.draw_sequencer_grid)
+        draw_with_offset(self.draw_controls)
+        draw_with_offset(self.draw_presets)
+        draw_with_offset(self.draw_visualizer)
+        
+        # Draw title and subtitle (always on top, no shake)
         title = self.font_huge.render("🎤 EPIC RAP BEAT MAKER", True, WHITE)
         title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 50))
         self.screen.blit(title, title_rect)
         
-        subtitle = self.font_medium.render("Christian Hip-Hop Learning Edition", True, CYAN)
+        subtitle = self.font_medium.render("Professional Beat Making Edition", True, CYAN)
         subtitle_rect = subtitle.get_rect(center=(SCREEN_WIDTH // 2, 100))
         self.screen.blit(subtitle, subtitle_rect)
         
