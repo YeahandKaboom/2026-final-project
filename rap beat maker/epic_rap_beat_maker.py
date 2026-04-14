@@ -300,6 +300,73 @@ class SoundType(Enum):
     VOCAL_CHOP = "vocal_chop"
     REVERSE_CYMBAL = "reverse_cymbal"
 
+# Beat Enhancement System
+class BeatEnhancer:
+    def __init__(self):
+        self.pitch_shifts = {
+            SoundType.SNARE: 0.0,
+            SoundType.CLAP: 0.0,
+            SoundType.BASS: 0.0,
+            SoundType.FX: 0.0,
+            SoundType.EXPLOSION: 0.0,
+            SoundType.LASER: 0.0,
+            SoundType.ZAPPER: 0.0,
+            SoundType.BASS_808: 0.0,
+            SoundType.KICK_808: 0.0,
+            SoundType.HIHAT_OPEN: 0.0,
+            SoundType.HIHAT_CLOSED: 0.0,
+            SoundType.RIMSHOT: 0.0,
+            SoundType.COWBELL: 0.0,
+            SoundType.SYNTH_LEAD: 0.0,
+            SoundType.VOCAL_CHOP: 0.0,
+            SoundType.REVERSE_CYMBAL: 0.0
+        }
+        self.reverb_enabled = False
+        self.reverb_size = 0.5
+        self.reverb_decay = 0.5
+        self.swing_amount = 0.0
+        self.swing_enabled = False
+        
+    def set_pitch_shift(self, sound_type, semitones):
+        """Set pitch shift in semitones (-12 to +12)"""
+        self.pitch_shifts[sound_type] = max(-12, min(12, semitones))
+        
+    def get_pitch_multiplier(self, sound_type):
+        """Get pitch multiplier for sound synthesis"""
+        semitones = self.pitch_shifts[sound_type]
+        return 2 ** (semitones / 12)
+        
+    def toggle_reverb(self):
+        """Toggle reverb on/off"""
+        self.reverb_enabled = not self.reverb_enabled
+        
+    def set_reverb_size(self, size):
+        """Set reverb room size (0.0 to 1.0)"""
+        self.reverb_size = max(0.0, min(1.0, size))
+        
+    def set_reverb_decay(self, decay):
+        """Set reverb decay time (0.0 to 1.0)"""
+        self.reverb_decay = max(0.0, min(1.0, decay))
+        
+    def set_swing(self, amount):
+        """Set swing amount (0.0 to 1.0)"""
+        self.swing_amount = max(0.0, min(1.0, amount))
+        
+    def toggle_swing(self):
+        """Toggle swing on/off"""
+        self.swing_enabled = not self.swing_enabled
+        
+    def apply_swing_timing(self, step):
+        """Apply swing timing to step"""
+        if not self.swing_enabled or self.swing_amount == 0:
+            return step
+            
+        # Apply swing to 8th notes
+        if step % 2 == 1:  # Off-beat
+            swing_offset = self.swing_amount * 0.5
+            return step + swing_offset
+        return step
+
 class BeatPattern:
     def __init__(self):
         self.pattern = [[False for _ in range(16)] for _ in range(16)]
@@ -818,6 +885,9 @@ class EpicRapBeatMaker:
         self.lyric_timer = 0
         self.lyric_display_time = 3000  # Show each lyric for 3 seconds
         self.last_lyric_change = 0
+        
+        # Beat Enhancement System
+        self.beat_enhancer = BeatEnhancer()
         
         # Presets
         self.presets = {
