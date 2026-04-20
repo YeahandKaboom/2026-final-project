@@ -132,9 +132,39 @@ class Basketball:
         
         # Horizontal line
         end_x3 = self.x + math.cos(math.radians(angle + 90)) * self.radius
-        end_y3 = self.y + math.sin(math.radians(angle + 90)) * self.radius
+        end_y3 = self.y - math.sin(math.radians(angle + 90)) * self.radius
         end_x4 = self.x - math.cos(math.radians(angle + 90)) * self.radius
         end_y4 = self.y - math.sin(math.radians(angle + 90)) * self.radius
+        pygame.draw.line(screen, BLACK, (end_x3, end_y3), (end_x4, end_y4), 2)
+    
+    def draw_with_offset(self, screen, cam_x, cam_y):
+        """Draw basketball with camera offset"""
+        # Draw at offset position
+        draw_x = self.x + cam_x
+        draw_y = self.y + cam_y
+        
+        # Draw basketball with lines
+        pygame.draw.circle(screen, ORANGE, (int(draw_x), int(draw_y)), self.radius)
+        pygame.draw.circle(screen, BLACK, (int(draw_x), int(draw_y)), self.radius, 2)
+        
+        # Draw basketball lines
+        if self.spinning:
+            angle = self.spin_angle
+        else:
+            angle = 0
+            
+        # Vertical line
+        end_x1 = draw_x + math.cos(math.radians(angle)) * self.radius
+        end_y1 = draw_y + math.sin(math.radians(angle)) * self.radius
+        end_x2 = draw_x - math.cos(math.radians(angle)) * self.radius
+        end_y2 = draw_y - math.sin(math.radians(angle)) * self.radius
+        pygame.draw.line(screen, BLACK, (end_x1, end_y1), (end_x2, end_y2), 2)
+        
+        # Horizontal line
+        end_x3 = draw_x + math.cos(math.radians(angle + 90)) * self.radius
+        end_y3 = draw_y - math.sin(math.radians(angle + 90)) * self.radius
+        end_x4 = draw_x - math.cos(math.radians(angle + 90)) * self.radius
+        end_y4 = draw_y - math.sin(math.radians(angle + 90)) * self.radius
         pygame.draw.line(screen, BLACK, (end_x3, end_y3), (end_x4, end_y4), 2)
 
 class Player:
@@ -156,13 +186,45 @@ class Player:
         self.gravity = 0.8
         
         # Basketball
-        self.has_ball = False
+        self.has_ball = True  # Start with ball always
         self.shoot_power = 0
         self.shoot_charging = False
         
-        # Animation
+        # Advanced dribbling system
+        self.dribble_timer = 0
+        self.is_dribbling = False
+        self.dribble_style = "normal"  # normal, through_legs, behind_back
+        self.dribble_height = 25
+        self.ball_rotation = 0
+        self.dribble_speed = 0.1
+        
+        # Realistic body animation
         self.animation_frame = 0
         self.facing_right = True
+        self.body_angle = 0
+        self.arm_angle = 0
+        self.leg_angle_left = 0
+        self.leg_angle_right = 0
+        self.head_angle = 0
+        self.walking_cycle = 0
+        self.running_cycle = 0
+        self.jumping_animation = 0
+        
+        # Character appearance
+        self.skin_color = (255, 220, 177)  # Default skin tone
+        self.hair_color = (50, 25, 0)  # Default hair
+        self.jersey_color = (0, 100, 200)  # Default jersey
+        self.short_color = (0, 50, 150)  # Default shorts
+        self.shoe_color = (0, 0, 0)  # Default shoes
+        
+        # Body dimensions
+        self.head_radius = 12
+        self.neck_length = 8
+        self.torso_height = 25
+        self.torso_width = 20
+        self.arm_length = 18
+        self.leg_length = 30
+        self.leg_width = 8
         
     def set_stats(self):
         """Set stats based on character type"""
@@ -198,17 +260,268 @@ class Player:
             self.y = SCREEN_HEIGHT - 140
             self.vy = 0
             self.on_ground = True
+            self.jumping_animation = 0
         else:
             self.on_ground = False
             
         # Boundaries
         self.x = max(20, min(SCREEN_WIDTH - 20, self.x))
         
+        # Advanced dribbling mechanics
+        if self.has_ball and self.on_ground:
+            self.dribble_timer += 1
+            
+            # Dribble frequency based on movement speed
+            dribble_frequency = 15 if abs(self.vx) > 2 else 20
+            
+            if self.dribble_timer >= dribble_frequency:
+                self.is_dribbling = True
+                self.dribble_timer = 0
+                
+                # Randomly change dribble style for variety
+                if random.random() < 0.1:  # 10% chance to change style
+                    styles = ["normal", "through_legs", "behind_back"]
+                    self.dribble_style = random.choice(styles)
+                    
+                # Update ball rotation
+                self.ball_rotation += 45
+            else:
+                self.is_dribbling = False
+        else:
+            self.dribble_timer = 0
+            self.is_dribbling = False
+            
+        # Realistic body animation
+        self.animation_frame += 0.1
+        
+        # Walking/running animation
+        if abs(self.vx) > 0.5:
+            if abs(self.vx) > 3:  # Running
+                self.running_cycle += 0.3
+                self.leg_angle_left = math.sin(self.running_cycle) * 30
+                self.leg_angle_right = math.sin(self.running_cycle + math.pi) * 30
+                self.arm_angle = math.sin(self.running_cycle * 2) * 20
+            else:  # Walking
+                self.walking_cycle += 0.15
+                self.leg_angle_left = math.sin(self.walking_cycle) * 15
+                self.leg_angle_right = math.sin(self.walking_cycle + math.pi) * 15
+                self.arm_angle = math.sin(self.walking_cycle * 2) * 10
+        else:  # Standing
+            self.leg_angle_left *= 0.9  # Smooth return to neutral
+            self.leg_angle_right *= 0.9
+            self.arm_angle *= 0.9
+            
+        # Body leaning based on movement
+        self.body_angle = self.vx * 2
+        
+        # Head movement
+        self.head_angle = math.sin(self.animation_frame) * 2
+        
+        # Jumping animation
+        if not self.on_ground:
+            self.jumping_animation = min(self.jumping_animation + 0.2, 1)
+            self.leg_angle_left = -20
+            self.leg_angle_right = -20
+            self.arm_angle = 45 if self.has_ball else -30
+        else:
+            self.jumping_animation = max(self.jumping_animation - 0.1, 0)
+            
         # Friction
         self.vx *= 0.9
         
-        # Animation
-        self.animation_frame += 1
+    def draw_realistic(self, screen):
+        """Draw realistic character with anti-aliased graphics"""
+        # Calculate body positions based on animations
+        
+        # Head position
+        head_x = self.x + math.sin(math.radians(self.head_angle)) * 2
+        head_y = self.y - 50 - self.jumping_animation * 10
+        
+        # Neck position
+        neck_x = self.x
+        neck_y = self.y - 38 - self.jumping_animation * 8
+        
+        # Torso position (leaning based on movement)
+        torso_x = self.x + math.sin(math.radians(self.body_angle)) * 5
+        torso_y = self.y - 25 - self.jumping_animation * 5
+        
+        # Draw legs with anti-aliasing
+        # Left leg
+        left_hip_x = torso_x - 5
+        left_hip_y = torso_y + self.torso_height // 2
+        left_knee_x = left_hip_x + math.sin(math.radians(self.leg_angle_left)) * 15
+        left_knee_y = left_hip_y + 15
+        left_foot_x = left_hip_x + math.sin(math.radians(self.leg_angle_left)) * 30
+        left_foot_y = self.y
+        
+        # Draw left leg with thicker lines for clarity
+        pygame.draw.line(screen, self.short_color, (left_hip_x, left_hip_y), (left_knee_x, left_knee_y), self.leg_width + 2)
+        pygame.draw.line(screen, self.short_color, (left_knee_x, left_knee_y), (left_foot_x, left_foot_y), self.leg_width + 2)
+        pygame.draw.circle(screen, self.shoe_color, (int(left_foot_x), int(left_foot_y)), 8)
+        pygame.draw.circle(screen, BLACK, (int(left_foot_x), int(left_foot_y)), 8, 2)
+        
+        # Right leg
+        right_hip_x = torso_x + 5
+        right_hip_y = torso_y + self.torso_height // 2
+        right_knee_x = right_hip_x + math.sin(math.radians(self.leg_angle_right)) * 15
+        right_knee_y = right_hip_y + 15
+        right_foot_x = right_hip_x + math.sin(math.radians(self.leg_angle_right)) * 30
+        right_foot_y = self.y
+        
+        # Draw right leg with thicker lines
+        pygame.draw.line(screen, self.short_color, (right_hip_x, right_hip_y), (right_knee_x, right_knee_y), self.leg_width + 2)
+        pygame.draw.line(screen, self.short_color, (right_knee_x, right_knee_y), (right_foot_x, right_foot_y), self.leg_width + 2)
+        pygame.draw.circle(screen, self.shoe_color, (int(right_foot_x), int(right_foot_y)), 8)
+        pygame.draw.circle(screen, BLACK, (int(right_foot_x), int(right_foot_y)), 8, 2)
+        
+        # Draw torso (jersey) with better contrast
+        torso_rect = pygame.Rect(torso_x - self.torso_width // 2 - 2, torso_y - 2, 
+                               self.torso_width + 4, self.torso_height + 4)
+        pygame.draw.rect(screen, self.jersey_color, torso_rect)
+        pygame.draw.rect(screen, BLACK, torso_rect, 3)
+        
+        # Draw arms with thicker lines
+        # Left arm
+        left_shoulder_x = torso_x - self.torso_width // 2
+        left_shoulder_y = torso_y + 5
+        left_elbow_x = left_shoulder_x + math.sin(math.radians(self.arm_angle + 90)) * self.arm_length // 2
+        left_elbow_y = left_shoulder_y + 10
+        left_hand_x = left_shoulder_x + math.sin(math.radians(self.arm_angle + 90)) * self.arm_length
+        left_hand_y = left_shoulder_y + 20
+        
+        # Draw left arm
+        pygame.draw.line(screen, self.skin_color, (left_shoulder_x, left_shoulder_y), (left_elbow_x, left_elbow_y), 8)
+        pygame.draw.line(screen, self.skin_color, (left_elbow_x, left_elbow_y), (left_hand_x, left_hand_y), 7)
+        pygame.draw.circle(screen, self.skin_color, (int(left_hand_x), int(left_hand_y)), 8)
+        pygame.draw.circle(screen, BLACK, (int(left_hand_x), int(left_hand_y)), 8, 2)
+        
+        # Right arm (adjusted for dribbling)
+        right_shoulder_x = torso_x + self.torso_width // 2
+        right_shoulder_y = torso_y + 5
+        
+        if self.has_ball:
+            # Arm position for dribbling
+            if self.dribble_style == "normal":
+                right_elbow_x = right_shoulder_x + math.sin(math.radians(self.arm_angle - 45)) * self.arm_length // 2
+                right_elbow_y = right_shoulder_y + 15
+                right_hand_x = right_shoulder_x + math.sin(math.radians(self.arm_angle - 45)) * self.arm_length
+                right_hand_y = right_shoulder_y + 25
+            elif self.dribble_style == "through_legs":
+                right_elbow_x = right_shoulder_x + math.sin(math.radians(self.arm_angle - 90)) * self.arm_length // 2
+                right_elbow_y = right_shoulder_y + 20
+                right_hand_x = right_shoulder_x + math.sin(math.radians(self.arm_angle - 90)) * self.arm_length
+                right_hand_y = right_shoulder_y + 30
+            elif self.dribble_style == "behind_back":
+                right_elbow_x = right_shoulder_x - math.sin(math.radians(self.arm_angle)) * self.arm_length // 2
+                right_elbow_y = right_shoulder_y + 15
+                right_hand_x = right_shoulder_x - math.sin(math.radians(self.arm_angle)) * self.arm_length
+                right_hand_y = right_shoulder_y + 25
+        else:
+            # Normal arm position
+            right_elbow_x = right_shoulder_x + math.sin(math.radians(self.arm_angle - 90)) * self.arm_length // 2
+            right_elbow_y = right_shoulder_y + 10
+            right_hand_x = right_shoulder_x + math.sin(math.radians(self.arm_angle - 90)) * self.arm_length
+            right_hand_y = right_shoulder_y + 20
+            
+        # Draw right arm
+        pygame.draw.line(screen, self.skin_color, (right_shoulder_x, right_shoulder_y), (right_elbow_x, right_elbow_y), 8)
+        pygame.draw.line(screen, self.skin_color, (right_elbow_x, right_elbow_y), (right_hand_x, right_hand_y), 7)
+        pygame.draw.circle(screen, self.skin_color, (int(right_hand_x), int(right_hand_y)), 8)
+        pygame.draw.circle(screen, BLACK, (int(right_hand_x), int(right_hand_y)), 8, 2)
+        
+        # Draw neck with thicker line
+        pygame.draw.line(screen, self.skin_color, (neck_x, neck_y), (torso_x, torso_y), 10)
+        
+        # Draw head with better contrast
+        pygame.draw.circle(screen, self.skin_color, (int(head_x), int(head_y)), self.head_radius + 2)
+        pygame.draw.circle(screen, BLACK, (int(head_x), int(head_y)), self.head_radius + 2, 3)
+        
+        # Draw hair with better definition
+        hair_rect = pygame.Rect(head_x - self.head_radius - 2, head_y - self.head_radius - 7, 
+                               (self.head_radius + 2) * 2, 10)
+        pygame.draw.rect(screen, self.hair_color, hair_rect)
+        pygame.draw.rect(screen, BLACK, hair_rect, 2)
+        
+        # Draw face features with better visibility
+        # Eyes
+        eye_y = int(head_y - 2)
+        if self.facing_right:
+            # Left eye
+            pygame.draw.circle(screen, WHITE, (int(head_x + 4), eye_y), 4)
+            pygame.draw.circle(screen, BLACK, (int(head_x + 5), eye_y), 3)
+            # Right eye
+            pygame.draw.circle(screen, WHITE, (int(head_x - 4), eye_y), 4)
+            pygame.draw.circle(screen, BLACK, (int(head_x - 3), eye_y), 3)
+        else:
+            # Left eye
+            pygame.draw.circle(screen, WHITE, (int(head_x - 4), eye_y), 4)
+            pygame.draw.circle(screen, BLACK, (int(head_x - 5), eye_y), 3)
+            # Right eye
+            pygame.draw.circle(screen, WHITE, (int(head_x + 4), eye_y), 4)
+            pygame.draw.circle(screen, BLACK, (int(head_x + 3), eye_y), 3)
+            
+        # Draw basketball when player has ball with better visibility
+        if self.has_ball:
+            # Ball position based on dribble style
+            if self.dribble_style == "normal":
+                ball_x = right_hand_x
+                ball_y = right_hand_y - 5
+            elif self.dribble_style == "through_legs":
+                ball_x = torso_x
+                ball_y = self.y - 10
+            elif self.dribble_style == "behind_back":
+                ball_x = torso_x - 20
+                ball_y = torso_y + 10
+                
+            # Dribble animation
+            if self.is_dribbling:
+                ball_y += 8  # Ball moves down when dribbling
+                
+            # Draw basketball with better contrast
+            pygame.draw.circle(screen, ORANGE, (int(ball_x), int(ball_y)), 10)
+            pygame.draw.circle(screen, BLACK, (int(ball_x), int(ball_y)), 10, 3)
+            
+            # Basketball lines with rotation and better visibility
+            angle = math.radians(self.ball_rotation)
+            end_x1 = ball_x + math.cos(angle) * 10
+            end_y1 = ball_y + math.sin(angle) * 10
+            end_x2 = ball_x - math.cos(angle) * 10
+            end_y2 = ball_y - math.sin(angle) * 10
+            pygame.draw.line(screen, BLACK, (end_x1, end_y1), (end_x2, end_y2), 2)
+            
+            # Horizontal line
+            end_x3 = ball_x + math.cos(angle + math.pi/2) * 10
+            end_y3 = ball_y + math.sin(angle + math.pi/2) * 10
+            end_x4 = ball_x - math.cos(angle + math.pi/2) * 10
+            end_y4 = ball_y - math.sin(angle + math.pi/2) * 10
+            pygame.draw.line(screen, BLACK, (end_x3, end_y3), (end_x4, end_y4), 2)
+            
+    def draw(self, screen):
+        """Draw character using realistic method"""
+        self.draw_realistic(screen)
+        
+        # Draw character name
+        font = pygame.font.Font(None, 20)
+        name = self.character_type.name.replace("_", " ")
+        name_text = font.render(name, True, WHITE)
+        name_rect = name_text.get_rect(center=(int(self.x), int(self.y - 70)))
+        screen.blit(name_text, name_rect)
+        
+        # Draw shoot power bar when charging
+        if self.shoot_charging:
+            bar_width = 40
+            bar_height = 6
+            bar_x = self.x - bar_width // 2
+            bar_y = self.y - 60
+            
+            # Background
+            pygame.draw.rect(screen, BLACK, (bar_x - 1, bar_y - 1, bar_width + 2, bar_height + 2))
+            pygame.draw.rect(screen, WHITE, (bar_x, bar_y, bar_width, bar_height))
+            
+            # Power fill
+            fill_width = int(bar_width * (self.shoot_power / 100))
+            power_color = GREEN if self.shoot_power < 70 else YELLOW if self.shoot_power < 90 else RED
+            pygame.draw.rect(screen, power_color, (bar_x, bar_y, fill_width, bar_height))
         
     def jump(self):
         if self.on_ground:
@@ -265,6 +578,52 @@ class Player:
             fill_width = int(bar_width * (self.shoot_power / 100))
             power_color = GREEN if self.shoot_power < 70 else YELLOW if self.shoot_power < 90 else RED
             pygame.draw.rect(screen, power_color, (bar_x, bar_y, fill_width, bar_height))
+        
+        # Draw basketball when player has ball
+        if self.has_ball:
+            ball_y = self.y - 25
+            if self.is_dribbling:
+                ball_y += 5  # Ball moves up when dribbling
+            pygame.draw.circle(screen, ORANGE, (int(self.x), int(ball_y)), 8)
+            pygame.draw.circle(screen, BLACK, (int(self.x), int(ball_y)), 8, 2)
+    
+    def draw_with_offset(self, screen, cam_x, cam_y):
+        """Draw player with camera offset using realistic method"""
+        # Temporarily modify position for drawing
+        original_x = self.x
+        original_y = self.y
+        self.x += cam_x
+        self.y += cam_y
+        
+        # Draw realistic character
+        self.draw_realistic(screen)
+        
+        # Draw character name
+        font = pygame.font.Font(None, 20)
+        name = self.character_type.name.replace("_", " ")
+        name_text = font.render(name, True, WHITE)
+        name_rect = name_text.get_rect(center=(int(self.x), int(self.y - 70)))
+        screen.blit(name_text, name_rect)
+        
+        # Draw shoot power bar when charging
+        if self.shoot_charging:
+            bar_width = 40
+            bar_height = 6
+            bar_x = self.x - bar_width // 2
+            bar_y = self.y - 60
+            
+            # Background
+            pygame.draw.rect(screen, BLACK, (bar_x - 1, bar_y - 1, bar_width + 2, bar_height + 2))
+            pygame.draw.rect(screen, WHITE, (bar_x, bar_y, bar_width, bar_height))
+            
+            # Power fill
+            fill_width = int(bar_width * (self.shoot_power / 100))
+            power_color = GREEN if self.shoot_power < 70 else YELLOW if self.shoot_power < 90 else RED
+            pygame.draw.rect(screen, power_color, (bar_x, bar_y, fill_width, bar_height))
+        
+        # Restore original position
+        self.x = original_x
+        self.y = original_y
 
 class NBAOpponent(Player):
     def __init__(self, x, y, nba_player):
@@ -410,6 +769,35 @@ class Hoop:
             
         for i in range(0, len(net_points) - 2, 2):
             pygame.draw.line(screen, WHITE, net_points[i], net_points[i + 1], 2)
+    
+    def draw_with_offset(self, screen, cam_x, cam_y):
+        """Draw hoop with camera offset"""
+        # Draw at offset position
+        draw_x = self.x + cam_x
+        draw_y = self.y + cam_y
+        
+        # Draw backboard
+        backboard_rect = pygame.Rect(draw_x + 30, draw_y - 60, 10, 80)
+        pygame.draw.rect(screen, WHITE, backboard_rect)
+        pygame.draw.rect(screen, BLACK, backboard_rect, 2)
+        
+        # Backboard square
+        pygame.draw.rect(screen, WHITE, (draw_x + 25, draw_y - 40, 20, 20), 2)
+        
+        # Draw rim
+        pygame.draw.ellipse(screen, HOOP_ORANGE, 
+                          (draw_x - self.width // 2, draw_y - self.rim_height // 2, 
+                           self.width, self.rim_height), 3)
+        
+        # Draw net
+        net_points = []
+        for i in range(8):
+            x = draw_x - self.width // 2 + i * (self.width // 7)
+            net_points.append((x, draw_y))
+            net_points.append((x - 5, draw_y + 30))
+            
+        for i in range(0, len(net_points) - 2, 2):
+            pygame.draw.line(screen, WHITE, net_points[i], net_points[i + 1], 2)
 
 class EpicBasketballGame:
     def __init__(self):
@@ -485,25 +873,78 @@ class EpicBasketballGame:
                                  (int(particle['x']), int(particle['y'])), size)
     
     def draw_court(self):
-        """Draw life-like basketball court"""
-        # Draw wood floor with tiny squares for life-like texture
-        for i in range(0, SCREEN_WIDTH, 2):
-            for j in range(0, SCREEN_HEIGHT, 2):
-                wood_grain = (139 + (i % 10) - (j % 8), 90 + (j % 6), 43 + (i % 4))
-                pygame.draw.rect(self.screen, wood_grain, (i, j, 2, 2))        # Wood floor effect
-        for i in range(0, SCREEN_WIDTH, 20):
-            wood_color = (139 + (i % 4) * 3, 90 + (i % 4) * 2, 43 + (i % 4) * 1)
-            pygame.draw.rect(self.screen, wood_color, (i, 0, 10, 10))
+        """Draw professional basketball court with crystal clear graphics"""
+        # Draw wood floor with realistic texture
+        wood_base = (210, 180, 140)  # Light wood color
+        self.screen.fill(wood_base)
         
-        # Court lines
-        pygame.draw.rect(self.screen, COURT_LINE, (0, SCREEN_HEIGHT - 100, SCREEN_WIDTH, 100), 3)
+        # Add wood grain texture
+        for i in range(0, SCREEN_WIDTH, 4):
+            for j in range(0, SCREEN_HEIGHT, 8):
+                wood_variation = (random.randint(-10, 10), random.randint(-10, 10), random.randint(-5, 5))
+                wood_color = tuple(max(0, min(255, wood_base[k] + wood_variation[k])) for k in range(3))
+                pygame.draw.rect(self.screen, wood_color, (i, j, 4, 8))
+        
+        # Court boundary (clear white lines)
+        pygame.draw.rect(self.screen, WHITE, (50, 50, SCREEN_WIDTH - 100, SCREEN_HEIGHT - 150), 4)
         
         # Half court line
-        pygame.draw.line(self.screen, COURT_LINE, (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100), 
-                        (SCREEN_WIDTH // 2, 0), 3)
+        pygame.draw.line(self.screen, WHITE, (SCREEN_WIDTH // 2, 50), 
+                        (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100), 4)
         
         # Center court circle
-        pygame.draw.circle(self.screen, COURT_LINE, (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 200), 60, 3)
+        pygame.draw.circle(self.screen, WHITE, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), 80, 4)
+        pygame.draw.circle(self.screen, WHITE, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), 75, 2)
+        
+        # Three-point line (left side)
+        pygame.draw.arc(self.screen, WHITE, (50, SCREEN_HEIGHT // 2 - 120, 240, 240), 
+                      -math.pi/2, math.pi/2, 4)
+        
+        # Three-point line (right side) 
+        pygame.draw.arc(self.screen, WHITE, (SCREEN_WIDTH - 290, SCREEN_HEIGHT // 2 - 120, 240, 240), 
+                      math.pi/2, 3*math.pi/2, 4)
+        
+        # Free throw circle (left)
+        pygame.draw.circle(self.screen, WHITE, (200, SCREEN_HEIGHT // 2), 60, 3)
+        pygame.draw.circle(self.screen, WHITE, (200, SCREEN_HEIGHT // 2), 55, 2)
+        
+        # Free throw circle (right)
+        pygame.draw.circle(self.screen, WHITE, (SCREEN_WIDTH - 200, SCREEN_HEIGHT // 2), 60, 3)
+        pygame.draw.circle(self.screen, WHITE, (SCREEN_WIDTH - 200, SCREEN_HEIGHT // 2), 55, 2)
+        
+        # Free throw line (left)
+        pygame.draw.line(self.screen, WHITE, (140, SCREEN_HEIGHT // 2 - 60), 
+                        (260, SCREEN_HEIGHT // 2 - 60), 3)
+        
+        # Free throw line (right)
+        pygame.draw.line(self.screen, WHITE, (SCREEN_WIDTH - 260, SCREEN_HEIGHT // 2 - 60), 
+                        (SCREEN_WIDTH - 140, SCREEN_HEIGHT // 2 - 60), 3)
+        
+        # Lane lines (left)
+        pygame.draw.line(self.screen, WHITE, (140, SCREEN_HEIGHT // 2 - 60), 
+                        (140, SCREEN_HEIGHT // 2 + 60), 3)
+        pygame.draw.line(self.screen, WHITE, (260, SCREEN_HEIGHT // 2 - 60), 
+                        (260, SCREEN_HEIGHT // 2 + 60), 3)
+        
+        # Lane lines (right)
+        pygame.draw.line(self.screen, WHITE, (SCREEN_WIDTH - 260, SCREEN_HEIGHT // 2 - 60), 
+                        (SCREEN_WIDTH - 260, SCREEN_HEIGHT // 2 + 60), 3)
+        pygame.draw.line(self.screen, WHITE, (SCREEN_WIDTH - 140, SCREEN_HEIGHT // 2 - 60), 
+                        (SCREEN_WIDTH - 140, SCREEN_HEIGHT // 2 + 60), 3)
+        
+        # Baseline (left)
+        pygame.draw.line(self.screen, WHITE, (50, SCREEN_HEIGHT - 100), 
+                        (50, 50), 4)
+        
+        # Baseline (right)
+        pygame.draw.line(self.screen, WHITE, (SCREEN_WIDTH - 50, SCREEN_HEIGHT - 100), 
+                        (SCREEN_WIDTH - 50, 50), 4)
+        
+        # Add court text
+        font = pygame.font.Font(None, 36)
+        court_text = font.render("1v1 BASKETBALL", True, (100, 100, 100))
+        text_rect = court_text.get_rect(center=(SCREEN_WIDTH // 2, 30))
+        self.screen.blit(court_text, text_rect)
         
         # Free throw line
         pygame.draw.line(self.screen, COURT_LINE, (200, SCREEN_HEIGHT - 100), 
@@ -644,25 +1085,61 @@ class EpicBasketballGame:
         self.screen.blit(inst_text, inst_rect)
         
     def draw_game(self):
-        """Draw game screen"""
-        # Draw court
-        self.draw_court()
+        """Draw game screen with camera following player"""
+        # Calculate camera offset for player-centered view
+        camera_offset_x = SCREEN_WIDTH // 2 - self.player.x
+        camera_offset_y = SCREEN_HEIGHT // 2 - self.player.y
         
-        # Draw game objects
-        self.hoop.draw(self.screen)
-        self.ball.draw(self.screen)
-        self.player.draw(self.screen)
-        self.opponent.draw(self.screen)
+        # Apply slight angle effect based on player movement
+        angle_offset = self.player.vx * 2  # Lean when moving
         
-        # Draw particles
+        # Draw court with camera offset
+        self.draw_court_with_offset(camera_offset_x, camera_offset_y, angle_offset)
+        
+        # Draw game objects with camera offset
+        self.hoop.draw_with_offset(self.screen, camera_offset_x, camera_offset_y)
+        self.ball.draw_with_offset(self.screen, camera_offset_x, camera_offset_y)
+        self.player.draw_with_offset(self.screen, camera_offset_x, camera_offset_y)
+        self.opponent.draw_with_offset(self.screen, camera_offset_x, camera_offset_y)
+        
+        # Draw particles (no camera offset)
         self.draw_particles()
         
-        # Draw UI
+        # Draw UI (no camera offset)
         self.draw_game_ui()
         
         # Apply screen shake
         if self.screen_shake > 0:
             self.screen_shake -= 1
+            
+    def draw_court_with_offset(self, cam_x, cam_y, angle):
+        """Draw court with camera offset and angle"""
+        # Simple court drawing with offset
+        for i in range(0, SCREEN_WIDTH, 2):
+            for j in range(0, SCREEN_HEIGHT, 2):
+                # Apply angle transformation
+                offset_x = i + cam_x + math.sin(angle * 0.1) * (j - SCREEN_HEIGHT//2) * 0.05
+                offset_y = j + cam_y
+                color = COURT_GREEN if (i // 2 + j // 2) % 2 == 0 else BROWN
+                self.screen.set_at((int(offset_x), int(offset_y)), color)
+                
+    def draw_with_offset(self, screen, cam_x, cam_y):
+        """Draw object with camera offset"""
+        # Draw at offset position
+        draw_x = self.x + cam_x
+        draw_y = self.y + cam_y
+        
+        # Call original draw method with offset
+        if hasattr(self, 'draw'):
+            # Temporarily modify position for drawing
+            original_x = self.x
+            original_y = self.y
+            self.x = draw_x
+            self.y = draw_y
+            self.draw(screen)
+            # Restore original position
+            self.x = original_x
+            self.y = original_y
             
     def draw_game_ui(self):
         """Draw game UI"""
@@ -797,39 +1274,73 @@ class EpicBasketballGame:
         
         # Update ball
         if self.ball.held_by:
-            # Ball follows player
+            # Ball follows player with better positioning
             if self.ball.held_by == self.player:
                 self.ball.x = self.player.x
                 self.ball.y = self.player.y - 30
+                # Add dribble effect
+                if self.player.is_dribbling:
+                    self.ball.y += 5
             else:
                 self.ball.x = self.opponent.x
                 self.ball.y = self.opponent.y - 30
+                # Add dribble effect
+                if self.opponent.is_dribbling:
+                    self.ball.y += 5
         else:
+            # Enhanced ball physics
             self.ball.update()
             
-        # AI update
+            # Better court boundaries
+            if self.ball.x < 50:
+                self.ball.x = 50
+                self.ball.vx *= -0.8
+            elif self.ball.x > SCREEN_WIDTH - 50:
+                self.ball.x = SCREEN_WIDTH - 50
+                self.ball.vx *= -0.8
+                
+            # Ball goes out of bounds - reset possession
+            if self.ball.y > SCREEN_HEIGHT - 50 or self.ball.y < 0:
+                self.reset_ball_possession()
+                
+        # Enhanced AI update
         self.opponent.ai_update(self.ball, self.player, self.hoop.x, self.hoop.y)
         
-        # Check for scoring
+        # Check for scoring with better detection
         if self.hoop.check_score(self.ball):
             if self.ball.held_by == self.player or (self.player.has_ball and self.ball.held_by is None):
                 self.player_score += 1
-                self.create_particle(self.hoop.x, self.hoop.y, YELLOW, 20)
-                self.screen_shake = 10
+                self.create_particle(self.hoop.x, self.hoop.y, YELLOW, 30)
+                self.screen_shake = 15
                 self.celebration_timer = 60
             else:
                 self.opponent_score += 1
-                self.create_particle(self.hoop.x, self.hoop.y, RED, 20)
+                self.create_particle(self.hoop.x, self.hoop.y, RED, 30)
+                self.screen_shake = 15
                 
-            # Reset ball
-            self.ball = Basketball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-            self.player.has_ball = False
-            self.opponent.has_ball = False
+            # Reset ball with better positioning
+            self.reset_ball_possession()
             self.shot_clock = 24
             
-            # Check for winner
-            if self.player_score >= self.max_score or self.opponent_score >= self.max_score:
-                self.state = GameState.GAME_OVER
+        # Check for winner
+        if self.player_score >= self.max_score:
+            self.state = GameState.GAME_OVER
+        elif self.opponent_score >= self.max_score:
+            self.state = GameState.GAME_OVER
+            
+    def reset_ball_possession(self):
+        """Reset ball possession after score or out of bounds"""
+        self.ball = Basketball(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        self.player.has_ball = False
+        self.opponent.has_ball = False
+        
+        # Random possession after reset
+        if random.random() < 0.5:
+            self.player.has_ball = True
+            self.ball.held_by = self.player
+        else:
+            self.opponent.has_ball = True
+            self.ball.held_by = self.opponent
                 
         # Update particles
         self.update_particles()
